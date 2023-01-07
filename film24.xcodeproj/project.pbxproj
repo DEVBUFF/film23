@@ -10,7 +10,6 @@
 		6BA3342529668176003C83F1 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA3342429668176003C83F1 /* PaywallView.swift */; };
 		6BA3342829668213003C83F1 /* 1.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6BA3342729668213003C83F1 /* 1.mp4 */; };
 		6BA3342C2966861F003C83F1 /* VideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA3342B2966861F003C83F1 /* VideoView.swift */; };
-		6BA3342E296686F8003C83F1 /* AVPlayerExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA3342D296686F8003C83F1 /* AVPlayerExtension.swift */; };
 		6BA334302966886B003C83F1 /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6BA3342F2966886B003C83F1 /* Colors.xcassets */; };
 		6BA33432296688B8003C83F1 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA33431296688B8003C83F1 /* ColorExtension.swift */; };
 		6BA3343429668946003C83F1 /* FontExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA3343329668946003C83F1 /* FontExtension.swift */; };
@@ -31,6 +30,12 @@
 		6BA3345B2966C03E003C83F1 /* CameraControllersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA3345A2966C03E003C83F1 /* CameraControllersView.swift */; };
 		6BC970AF29694D430029D040 /* AVAssetExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC970AE29694D430029D040 /* AVAssetExtension.swift */; };
 		6BC970B12969501D0029D040 /* VideoPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC970B02969501D0029D040 /* VideoPreviewView.swift */; };
+		6BC970B3296974C80029D040 /* AVPlayerExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC970B2296974C80029D040 /* AVPlayerExtension.swift */; };
+		6BC970B6296975F30029D040 /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC970B4296975F30029D040 /* Recorder.swift */; };
+		6BC970B7296975F30029D040 /* RecorderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC970B5296975F30029D040 /* RecorderError.swift */; };
+		6BC970B9296976150029D040 /* FrameRateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC970B8296976150029D040 /* FrameRateCalculator.swift */; };
+		6BC970BC2969764D0029D040 /* CaptureError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC970BA2969764D0029D040 /* CaptureError.swift */; };
+		6BC970BD2969764D0029D040 /* Capture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC970BB2969764D0029D040 /* Capture.swift */; };
 		6BCDC97229691A2B0063265D /* VideoTrimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCDC97029691A2B0063265D /* VideoTrimmer.swift */; };
 		6BCDC97329691A2B0063265D /* VideoTrimmerThumb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCDC97129691A2B0063265D /* VideoTrimmerThumb.swift */; };
 		6BCDC97529691B780063265D /* VideoTrimmerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCDC97429691B780063265D /* VideoTrimmerView.swift */; };
@@ -59,7 +64,6 @@
 		6BA3342429668176003C83F1 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		6BA3342729668213003C83F1 /* 1.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = 1.mp4; sourceTree = "<group>"; };
 		6BA3342B2966861F003C83F1 /* VideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoView.swift; sourceTree = "<group>"; };
-		6BA3342D296686F8003C83F1 /* AVPlayerExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVPlayerExtension.swift; sourceTree = "<group>"; };
 		6BA3342F2966886B003C83F1 /* Colors.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Colors.xcassets; sourceTree = "<group>"; };
 		6BA33431296688B8003C83F1 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
 		6BA3343329668946003C83F1 /* FontExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontExtension.swift; sourceTree = "<group>"; };
@@ -81,6 +85,12 @@
 		6BA3345A2966C03E003C83F1 /* CameraControllersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraControllersView.swift; sourceTree = "<group>"; };
 		6BC970AE29694D430029D040 /* AVAssetExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVAssetExtension.swift; sourceTree = "<group>"; };
 		6BC970B02969501D0029D040 /* VideoPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewView.swift; sourceTree = "<group>"; };
+		6BC970B2296974C80029D040 /* AVPlayerExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVPlayerExtension.swift; sourceTree = "<group>"; };
+		6BC970B4296975F30029D040 /* Recorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
+		6BC970B5296975F30029D040 /* RecorderError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecorderError.swift; sourceTree = "<group>"; };
+		6BC970B8296976150029D040 /* FrameRateCalculator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FrameRateCalculator.swift; sourceTree = "<group>"; };
+		6BC970BA2969764D0029D040 /* CaptureError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CaptureError.swift; sourceTree = "<group>"; };
+		6BC970BB2969764D0029D040 /* Capture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Capture.swift; sourceTree = "<group>"; };
 		6BCDC97029691A2B0063265D /* VideoTrimmer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoTrimmer.swift; sourceTree = "<group>"; };
 		6BCDC97129691A2B0063265D /* VideoTrimmerThumb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoTrimmerThumb.swift; sourceTree = "<group>"; };
 		6BCDC97429691B780063265D /* VideoTrimmerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoTrimmerView.swift; sourceTree = "<group>"; };
@@ -161,6 +171,11 @@
 		6BA334532966AFDE003C83F1 /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				6BC970BB2969764D0029D040 /* Capture.swift */,
+				6BC970BA2969764D0029D040 /* CaptureError.swift */,
+				6BC970B4296975F30029D040 /* Recorder.swift */,
+				6BC970B8296976150029D040 /* FrameRateCalculator.swift */,
+				6BC970B5296975F30029D040 /* RecorderError.swift */,
 				6BA334422966AA08003C83F1 /* CameraManager.swift */,
 				6BA334462966AB60003C83F1 /* FrameManager.swift */,
 				6BA334542966AFF3003C83F1 /* LUTsHelper.swift */,
@@ -304,13 +319,13 @@
 			isa = PBXGroup;
 			children = (
 				6BA334482966AB78003C83F1 /* CGImageExtension.swift */,
-				6BA3342D296686F8003C83F1 /* AVPlayerExtension.swift */,
 				6BA3343329668946003C83F1 /* FontExtension.swift */,
 				6BA33431296688B8003C83F1 /* ColorExtension.swift */,
 				6BCDFE6529684808007E48A5 /* ViewExtension.swift */,
 				6BCDFE6729684998007E48A5 /* UIDeviceExtension.swift */,
 				6BCDC978296929F90063265D /* TextExtension.swift */,
 				6BC970AE29694D430029D040 /* AVAssetExtension.swift */,
+				6BC970B2296974C80029D040 /* AVPlayerExtension.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -403,24 +418,28 @@
 				6BC970AF29694D430029D040 /* AVAssetExtension.swift in Sources */,
 				6BA334492966AB78003C83F1 /* CGImageExtension.swift in Sources */,
 				6BA3343A296697C2003C83F1 /* StateableButton.swift in Sources */,
-				6BA3342E296686F8003C83F1 /* AVPlayerExtension.swift in Sources */,
 				6BCDFE64296846F2007E48A5 /* VisualEffectView.swift in Sources */,
 				6BC970B12969501D0029D040 /* VideoPreviewView.swift in Sources */,
 				6BCDC97729691D140063265D /* EditVideoViewModel.swift in Sources */,
 				6BA3343F2966A937003C83F1 /* CaptureVideoView.swift in Sources */,
+				6BC970B9296976150029D040 /* FrameRateCalculator.swift in Sources */,
 				6BA3343429668946003C83F1 /* FontExtension.swift in Sources */,
+				6BC970B6296975F30029D040 /* Recorder.swift in Sources */,
 				6BCDFE6029681AB7007E48A5 /* FilterModel.swift in Sources */,
 				6BA3344F2966AC61003C83F1 /* ErrorView.swift in Sources */,
 				6BCDFE6229681FDF007E48A5 /* CarouselView.swift in Sources */,
 				6BCDFE6829684998007E48A5 /* UIDeviceExtension.swift in Sources */,
 				6BCDC97529691B780063265D /* VideoTrimmerView.swift in Sources */,
 				6BA334472966AB60003C83F1 /* FrameManager.swift in Sources */,
+				6BC970B7296975F30029D040 /* RecorderError.swift in Sources */,
+				6BC970BD2969764D0029D040 /* Capture.swift in Sources */,
 				6BE997D52963FB3C001B8A83 /* ContentView.swift in Sources */,
 				6BA334552966AFF3003C83F1 /* LUTsHelper.swift in Sources */,
 				6BA334452966AB0A003C83F1 /* CameraError.swift in Sources */,
 				6BCDC97329691A2B0063265D /* VideoTrimmerThumb.swift in Sources */,
 				6BCDFE6629684808007E48A5 /* ViewExtension.swift in Sources */,
 				6BA3343729668D80003C83F1 /* PagerView.swift in Sources */,
+				6BC970B3296974C80029D040 /* AVPlayerExtension.swift in Sources */,
 				6BA33432296688B8003C83F1 /* ColorExtension.swift in Sources */,
 				6BCDFE582967EE60007E48A5 /* ExposureControllerView.swift in Sources */,
 				6BCDC979296929F90063265D /* TextExtension.swift in Sources */,
@@ -431,6 +450,7 @@
 				6BA3344B2966ABB5003C83F1 /* CaptureVideoViewModel.swift in Sources */,
 				6BA334432966AA08003C83F1 /* CameraManager.swift in Sources */,
 				6BE997D32963FB3C001B8A83 /* film24App.swift in Sources */,
+				6BC970BC2969764D0029D040 /* CaptureError.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -564,11 +584,12 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = film24/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = 24Film;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Access to camera";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -577,9 +598,12 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.buffny.apps.film24;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -596,11 +620,12 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = film24/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = 24Film;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Access to camera";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -609,9 +634,12 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.buffny.apps.film24;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
