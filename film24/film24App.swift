@@ -11,7 +11,8 @@ import SwiftUI
 struct film24App: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CaptureVideoView()
+//            PaywallView()
         }
     }
 }
