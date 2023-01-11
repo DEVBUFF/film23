@@ -88,7 +88,6 @@ class EditPlayerUIView: UIView {
     
     func removeAllObservers() {
         NotificationCenter.default.removeObserver(self)
-//        player.currentItem?.removeObserver(self, forKeyPath: "status")
     }
 
     required init?(coder: NSCoder) {

@@ -92,7 +92,6 @@ class PlayerUIView: UIView {
     
     func removeAllObservers() {
         NotificationCenter.default.removeObserver(self)
-        player.currentItem?.removeObserver(self, forKeyPath: "status")
     }
 
     @objc func playerItemDidReachEnd(notification: Notification) {

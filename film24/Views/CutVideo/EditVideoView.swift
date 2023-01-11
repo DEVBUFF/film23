@@ -13,6 +13,7 @@ struct EditVideoView: View {
     @StateObject var model: EditVideoViewModel
     @Binding var showed: Bool
     @State private var player: AVPlayer
+    @State private var progressTime: String = "00:00"
     
     init(model: EditVideoViewModel, showed: Binding<Bool>) {
         self._model = StateObject(wrappedValue: model)
@@ -38,19 +39,27 @@ struct EditVideoView: View {
                 
                 VideoTrimmerView(
                     videoUrl: model.videoUrl,
-                    player: player
+                    player: player,
+                    progressTime: $progressTime
                 )
                 .frame(height: 60)
                 .padding(.horizontal, 25)
                 
                 VStack(spacing: 8) {
-                    Text("SAVE")
-                        .font(.barlow(.regular, size: 28))
-                        .foregroundLinearGradient(
-                            colors: [.main, .second],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
+                    Button {
+                        model.saveVideoToPhotos(url: model.videoUrl) {
+                            showed = false
+                        }
+                    } label: {
+                        Text("SAVE")
+                            .font(.barlow(.regular, size: 28))
+                            .foregroundLinearGradient(
+                                colors: [.main, .second],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                    }
+                    
                     Text("AND SHARE")
                         .font(.barlow(.regular, size: 12))
                         .foregroundColor(.white.opacity(0.3))
@@ -74,8 +83,26 @@ struct EditVideoView: View {
             }
             .padding(.top, 50)
             
-            
+            VStack {
+                Text(progressTime)
+                    .foregroundColor(.black)
+                    .font(.barlow(.regular, size: 14))
+                    .background(
+                        Capsule()
+                            .foregroundColor(.white)
+                            .padding(.vertical, -8)
+                            .padding(.horizontal, -10)
+                    )
+                Spacer()
+            }
+                .padding(.top, 56)
         }
+    }
+    
+    func share() {
+        let activityController = UIActivityViewController(activityItems: [model.videoUrl], applicationActivities: nil)
+        
+        UIApplication.shared.windows.first?.rootViewController!.present(activityController, animated: true, completion: nil)
     }
 }
 

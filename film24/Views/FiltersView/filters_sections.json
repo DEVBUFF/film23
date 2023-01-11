@@ -1,0 +1,93 @@
+[
+    {
+        "title": "Warm",
+        "filters": [
+            {
+                "name": "summer01",
+                "lut_name": "demo.png",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer02",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer03",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer04",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer05",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            }
+        ]
+    },
+    {
+        "title": "Cold",
+        "filters": [
+            {
+                "name": "summer06",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer07",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer08",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer09",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer10",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            }
+        ]
+    },
+    {
+        "title": "winter",
+        "filters": [
+            {
+                "name": "summer11",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer12",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer13",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer14",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            },
+            {
+                "name": "summer15",
+                "lut_name": "",
+                "image_name": "filter_demo"
+            }
+        ]
+    }
+]
+

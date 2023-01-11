@@ -23,6 +23,7 @@ class CameraManager: NSObject, ObservableObject {
     let session = AVCaptureSession()
     
     var cameraPosition: AVCaptureDevice.Position = .back
+    var slowModeValue: CGFloat = 0
     private(set) var device: AVCaptureDevice?
     private var videoConnection: AVCaptureConnection?
     private let sessionQueue = DispatchQueue(label: "com.sessionQ")
@@ -33,10 +34,49 @@ class CameraManager: NSObject, ObservableObject {
     private var status = Status.unconfigured
     private var defaultZoomFactor = 1.0
     
+    /// Recorder
+    private static let deviceRgbColorSpace = CGColorSpaceCreateDeviceRGB()
+    private static let tempVideoFilename = "recording"
+    private static let tempVideoFileExtention = "mov"
     
+    let colorSpace: CGColorSpace = CGColorSpace.init(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+    var LUT: CIFilter?
     
+    private var ciContext: CIContext!
+    private var videoWritingStarted = false
+    private var videoWritingStartTime = CMTime()
+    private(set) var assetWriter: AVAssetWriter?
+    private var assetWriterAudioInput: AVAssetWriterInput?
+    private var assetWriterVideoInput: AVAssetWriterInput?
+    private var assetWriterInputPixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
+
+    private var currentAudioSampleBufferFormatDescription: CMFormatDescription?
+    private var currentVideoDimensions: CMVideoDimensions?
+    private var currentVideoTime = CMTime()
     
-    var recordedAction: ((URL)->())? = nil
+    private let frameRateCalculator = FrameRateCalculator()
+    private var timer: Timer?
+    private let timerUpdateInterval = 0.25
+
+    private var temporaryVideoFileURL: URL {
+        return URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(CameraManager.tempVideoFilename)
+            .appendingPathExtension(CameraManager.tempVideoFileExtention)
+    }
+    
+    private var origVideoURL: URL? = nil
+    
+    var recordingSeconds: Int {
+        guard assetWriter != nil else { return 0 }
+        let diff = currentVideoTime - videoWritingStartTime
+        let seconds = CMTimeGetSeconds(diff)
+        guard !(seconds.isNaN || seconds.isInfinite) else { return 0 }
+        return Int(seconds)
+    }
+
+    ///
+    
+    var recordedAction: ((URL, URL?)->())? = nil
     
     private override init() {
         super.init()
@@ -212,9 +252,9 @@ class CameraManager: NSObject, ObservableObject {
 
                 //Assume 0,01 as our limit to correct the ISO
                 if newExposureTargetOffset > 0.01 { //decrease ISO
-                    biasISO = -50
+                    biasISO = -500
                 } else if newExposureTargetOffset < -0.01 { //increase ISO
-                    biasISO = 50
+                    biasISO = 500
                 }
 
         if biasISO != Int(0) {
@@ -223,7 +263,7 @@ class CameraManager: NSObject, ObservableObject {
             newISO = newISO > (device?.activeFormat.maxISO)! ? (device?.activeFormat.maxISO)! : newISO
             newISO = newISO < (device?.activeFormat.minISO)! ? (device?.activeFormat.minISO)! : newISO
             
-            print(newISO)
+        print(newISO)
             if camera.isExposureModeSupported(.custom) {
                 do{
                     try camera.lockForConfiguration()
@@ -239,15 +279,23 @@ class CameraManager: NSObject, ObservableObject {
     
     func focus(_ point: CGPoint) {
         guard let camera = device else { return }
+        guard cameraPosition == .back else { return }
         
         let focus_x = point.x / UIScreen.main.bounds.width
         let focus_y = point.y / UIScreen.main.bounds.height
         
         let points = CGPoint(x: focus_x, y: focus_y)
+        
         do{
             try camera.lockForConfiguration()
-            camera.focusMode = .autoFocus
-            camera.focusPointOfInterest = points
+            if camera.isFocusModeSupported(.autoFocus) {
+                camera.focusMode = .autoFocus
+                camera.focusPointOfInterest = points
+            } else if camera.isFocusModeSupported(.continuousAutoFocus) {
+                camera.focusMode = .continuousAutoFocus
+                camera.focusPointOfInterest = points
+            }
+            
             if (camera.isExposureModeSupported(.autoExpose) && camera.isExposurePointOfInterestSupported) {
                 camera.exposureMode = .autoExpose
                 camera.exposurePointOfInterest = points
@@ -282,17 +330,19 @@ class CameraManager: NSObject, ObservableObject {
         }
     }
     
-    func recordVideo() {
+    func recordOrigVideo() {
         guard session.isRunning else {
             return
         }
+        origVideoURL = nil
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         let fileUrl = paths[0].appendingPathComponent("output.mp4")
         try? FileManager.default.removeItem(at: fileUrl)
+        origVideoURL = fileUrl
         videoFileOutput?.startRecording(to: fileUrl, recordingDelegate: self)
     }
     
-    func stopRecording() {
+    func stopOrigRecording() {
         guard session.isRunning else {
             return
         }
@@ -310,7 +360,7 @@ private extension CameraManager {
         
         if hasUltraWideCamera && position == .back {
             defaultZoomFactor = 2.0
-            let deviceTypes: [AVCaptureDevice.DeviceType] = [AVCaptureDevice.DeviceType.builtInDualWideCamera]
+            let deviceTypes: [AVCaptureDevice.DeviceType] = [AVCaptureDevice.DeviceType.builtInUltraWideCamera]
             let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: AVMediaType.video, position: position)
             return discoverySession.devices.first
         }
@@ -336,8 +386,345 @@ extension CameraManager: AVCaptureFileOutputRecordingDelegate {
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         if error == nil {
-            recordedAction?(outputFileURL)
+            origVideoURL = outputFileURL
         }
-        print("ddddd")
+    }
+}
+
+//Recorder
+extension CameraManager {
+    
+    private func makeAssetWriter() -> AVAssetWriter? {
+        do {
+            return try AVAssetWriter(url: temporaryVideoFileURL, fileType: .mov)
+        } catch {
+            return nil
+        }
+    }
+
+    private func makeAssetWriterVideoInput() -> AVAssetWriterInput {
+        let settings: [String: Any] = [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: currentVideoDimensions?.width ?? 0,
+            AVVideoHeightKey: currentVideoDimensions?.height ?? 0,
+        ]
+        
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+        input.expectsMediaDataInRealTime = true
+        return input
+    }
+
+    // create a pixel buffer adaptor for the asset writer; we need to obtain pixel buffers for rendering later from its pixel buffer pool
+    private func makeAssetWriterInputPixelBufferAdaptor(with input: AVAssetWriterInput) -> AVAssetWriterInputPixelBufferAdaptor {
+        let attributes: [String: Any] = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferWidthKey as String: currentVideoDimensions?.width ?? 0,
+            kCVPixelBufferHeightKey as String: currentVideoDimensions?.height ?? 0,
+            kCVPixelFormatOpenGLESCompatibility as String: kCFBooleanTrue!,
+        ]
+        return AVAssetWriterInputPixelBufferAdaptor(
+            assetWriterInput: input,
+            sourcePixelBufferAttributes: attributes
+        )
+    }
+
+    private func makeAudioCompressionSettings() -> [String: Any]? {
+        guard let currentAudioSampleBufferFormatDescription = self.currentAudioSampleBufferFormatDescription else {
+            return nil
+        }
+
+        let channelLayoutData: Data
+        var layoutSize: size_t = 0
+        if let channelLayout = CMAudioFormatDescriptionGetChannelLayout(currentAudioSampleBufferFormatDescription, sizeOut: &layoutSize) {
+            channelLayoutData = Data(bytes: channelLayout, count: layoutSize)
+        } else {
+            channelLayoutData = Data()
+        }
+
+        guard let basicDescription = CMAudioFormatDescriptionGetStreamBasicDescription(currentAudioSampleBufferFormatDescription) else {
+            return nil
+        }
+
+        // record the audio at AAC format, bitrate 64000, sample rate and channel number using the basic description from the audio samples
+        return [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVNumberOfChannelsKey: basicDescription.pointee.mChannelsPerFrame,
+            AVSampleRateKey: basicDescription.pointee.mSampleRate,
+            AVEncoderBitRateKey: 64000,
+            AVChannelLayoutKey: channelLayoutData,
+        ]
+    }
+    
+    private func getRenderedOutputPixcelBuffer(adaptor: AVAssetWriterInputPixelBufferAdaptor?) -> CVPixelBuffer? {
+        guard let pixelBufferPool = adaptor?.pixelBufferPool else {
+            NSLog("Cannot get pixel buffer pool")
+            return nil
+        }
+
+        var pixelBuffer: CVPixelBuffer?
+        CVPixelBufferPoolCreatePixelBuffer(nil, pixelBufferPool, &pixelBuffer)
+        guard let renderedOutputPixelBuffer = pixelBuffer else {
+            NSLog("Cannot obtain a pixel buffer from the buffer pool")
+            return nil
+        }
+
+        return renderedOutputPixelBuffer
+    }
+    
+    func recordVideo(_ context: CIContext, filterName: String) {
+        if !filterName.isEmpty {
+            recordOrigVideo()
+        }
+        self.ciContext = context
+        self.LUT = filterName.isEmpty ? nil : LUTsHelper.applyLUTsFilter(lutImage: filterName, dimension: 64, colorSpace: CameraManager.deviceRgbColorSpace)
+        sessionQueue.async { [unowned self] in
+            self.removeTemporaryVideoFileIfAny()
+
+            guard let newAssetWriter = self.makeAssetWriter() else { return }
+
+            let newAssetWriterVideoInput = self.makeAssetWriterVideoInput()
+            let canAddInput = newAssetWriter.canAdd(newAssetWriterVideoInput)
+            if canAddInput {
+                newAssetWriter.add(newAssetWriterVideoInput)
+            } else {
+                self.assetWriterVideoInput = nil
+                return
+            }
+
+            let newAssetWriterInputPixelBufferAdaptor = self.makeAssetWriterInputPixelBufferAdaptor(with: newAssetWriterVideoInput)
+
+//            guard let audioCompressionSettings = self.makeAudioCompressionSettings() else { return }
+//            let canApplayOutputSettings = newAssetWriter.canApply(outputSettings: audioCompressionSettings, forMediaType: .audio)
+//            if canApplayOutputSettings {
+//                let assetWriterAudioInput = AVAssetWriterInput(mediaType: .audio, outputSettings: audioCompressionSettings)
+//                assetWriterAudioInput.expectsMediaDataInRealTime = true
+//                self.assetWriterAudioInput = assetWriterAudioInput
+//
+//                let canAddInput = newAssetWriter.canAdd(assetWriterAudioInput)
+//                if canAddInput {
+//                    newAssetWriter.add(assetWriterAudioInput)
+//                } else {
+////                    DispatchQueue.main.async {
+////                        self.delegate?.recorderDidFail(with: RecorderError.couldNotAddAssetWriterAudioInput)
+////                    }
+//                    self.assetWriterAudioInput = nil
+//                    return
+//                }
+//            } else {
+////                DispatchQueue.main.async {
+////                    self.delegate?.recorderDidFail(with: RecorderError.couldNotApplyAudioOutputSettings)
+////                }
+//                return
+//            }
+
+            self.videoWritingStarted = false
+            self.assetWriter = newAssetWriter
+            self.assetWriterVideoInput = newAssetWriterVideoInput
+            self.assetWriterInputPixelBufferAdaptor = newAssetWriterInputPixelBufferAdaptor
+        }
+    }
+
+    private func abortRecording() {
+        guard let writer = assetWriter else { return }
+
+        writer.cancelWriting()
+        assetWriterVideoInput = nil
+        assetWriterAudioInput = nil
+        assetWriter = nil
+
+        // remove the temp file
+        let fileURL = writer.outputURL
+        try? FileManager.default.removeItem(at: fileURL)
+    }
+
+    func stopRecording() {
+        guard let writer = assetWriter else { return }
+        stopOrigRecording()
+        
+        assetWriterVideoInput = nil
+        assetWriterAudioInput = nil
+        assetWriterInputPixelBufferAdaptor = nil
+        assetWriter = nil
+        
+        sessionQueue.async { [unowned self] in
+            writer.endSession(atSourceTime: self.currentVideoTime)
+            writer.finishWriting { [self] in
+                switch writer.status {
+                case .failed:
+                    print("failed")
+                case .completed:
+                    if slowModeValue == 0 {
+                        self.recordedAction?(writer.outputURL, self.origVideoURL)
+                    } else {
+                        slowMotion(pathUrl: writer.outputURL)
+                    }
+                    
+                default:
+                    break
+                }
+            }
+        }
+    }
+    
+    func slowMotion(pathUrl: URL) {
+        let videoAsset = AVURLAsset.init(url: pathUrl, options: nil)
+        let currentAsset = AVAsset.init(url: pathUrl)
+
+        let vdoTrack = currentAsset.tracks(withMediaType: .video)[0]
+        let mixComposition = AVMutableComposition()
+
+        let compositionVideoTrack = mixComposition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
+
+        let videoInsertError: Error? = nil
+        var videoInsertResult = false
+        do {
+            try compositionVideoTrack?.insertTimeRange(
+                CMTimeRangeMake(start: .zero, duration: videoAsset.duration),
+                of: videoAsset.tracks(withMediaType: .video)[0],
+                at: .zero)
+            videoInsertResult = true
+        } catch let _ {
+        }
+
+        if !videoInsertResult || videoInsertError != nil {
+            //handle error
+            return
+        }
+
+
+        var duration: CMTime = .zero
+        duration = CMTimeAdd(duration, currentAsset.duration)
+        
+        
+        //MARK: You see this constant (videoScaleFactor) this helps in achieving the slow motion that you wanted. This increases the time scale of the video that makes slow motion
+        // just increase the videoScaleFactor value in order to play video in higher frames rates(more slowly)
+        let videoScaleFactor = slowModeValue
+        let videoDuration = videoAsset.duration
+        
+        let toDuration = CGFloat(videoDuration.value) * videoScaleFactor
+        
+        compositionVideoTrack?.scaleTimeRange(
+            CMTimeRangeMake(start: .zero, duration: videoDuration),
+            toDuration: CMTimeMake(value: Int64(toDuration), timescale: videoDuration.timescale))
+        compositionVideoTrack?.preferredTransform = vdoTrack.preferredTransform
+        
+        let dirPaths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).map(\.path)
+        let docsDir = dirPaths[0]
+        let outputFilePath = URL(fileURLWithPath: docsDir).appendingPathComponent("slowMotion\(UUID().uuidString).mp4").path
+        
+        if FileManager.default.fileExists(atPath: outputFilePath) {
+            do {
+                try FileManager.default.removeItem(atPath: outputFilePath)
+            } catch {
+            }
+        }
+        let filePath = URL(fileURLWithPath: outputFilePath)
+        
+        let assetExport = AVAssetExportSession(
+            asset: mixComposition,
+            presetName: AVAssetExportPresetHighestQuality)
+        assetExport?.outputURL = filePath
+        assetExport?.outputFileType = .mp4
+        
+        assetExport?.exportAsynchronously(completionHandler: {
+            switch assetExport?.status {
+            case .failed:
+                print("asset output media url = \(String(describing: assetExport?.outputURL))")
+                print("Export session faiied with error: \(String(describing: assetExport?.error))")
+                DispatchQueue.main.async(execute: {
+                    // completion(nil);
+                })
+            case .completed:
+                print("Successful")
+                let outputURL = assetExport!.outputURL
+                DispatchQueue.main.async(execute: {
+                    self.recordedAction?(outputURL!, self.origVideoURL)
+                })
+            case .none:
+                break
+            case .unknown:
+                break
+            case .waiting:
+                break
+            case .exporting:
+                break
+            case .cancelled:
+                break
+            case .some(_):
+                break
+            }
+        })
+    }
+    
+    func handleAudioSampleBuffer(buffer: CMSampleBuffer) {
+        guard let formatDesc = CMSampleBufferGetFormatDescription(buffer) else { return }
+        currentAudioSampleBufferFormatDescription = formatDesc
+
+        // write the audio data if it's from the audio connection
+        if assetWriter == nil { return }
+        guard let input = assetWriterAudioInput else { return }
+        if input.isReadyForMoreMediaData {
+            let success = input.append(buffer)
+            if !success {
+                abortRecording()
+            }
+        }
+    }
+   
+    func handleVideoSampleBuffer(buffer: CMSampleBuffer) {
+        let timestamp = CMSampleBufferGetPresentationTimeStamp(buffer)
+        frameRateCalculator.calculateFramerate(at: timestamp)
+
+        // update the video dimensions information
+        guard let formatDesc = CMSampleBufferGetFormatDescription(buffer) else { return }
+        currentVideoDimensions = CMVideoFormatDescriptionGetDimensions(formatDesc)
+
+        guard let imageBuffer = CMSampleBufferGetImageBuffer(buffer) else { return }
+        var sourceImage: CIImage = CIImage(cvPixelBuffer: imageBuffer)
+        sourceImage = sourceImage.transformed(by: sourceImage.orientationTransform(for: .upMirrored))
+        
+        guard let writer = assetWriter, let pixelBufferAdaptor = assetWriterInputPixelBufferAdaptor else {
+            return
+        }
+
+        // if we need to write video and haven't started yet, start writing
+        if !videoWritingStarted {
+            videoWritingStarted = true
+            let success = writer.startWriting()
+            if !success {
+                abortRecording()
+                return
+            }
+
+            writer.startSession(atSourceTime: timestamp)
+            videoWritingStartTime = timestamp
+        }
+
+        guard let renderedOutputPixelBuffer = getRenderedOutputPixcelBuffer(adaptor: pixelBufferAdaptor) else { return }
+
+        self.LUT?.setValue(sourceImage, forKey: "inputImage")
+        
+        if let filteredImage = self.LUT?.outputImage  {
+            ciContext.render(filteredImage, to: renderedOutputPixelBuffer, bounds: filteredImage.extent, colorSpace: CameraManager.deviceRgbColorSpace)
+        } else {
+            ciContext.render(sourceImage, to: renderedOutputPixelBuffer, bounds: sourceImage.extent, colorSpace: CameraManager.deviceRgbColorSpace)
+        }
+
+        // pass option nil to enable color matching at the output, otherwise the color will be off
+        currentVideoTime = timestamp
+
+        // write the video data
+        guard let input = assetWriterVideoInput else { return }
+        if input.isReadyForMoreMediaData {
+            let success = pixelBufferAdaptor.append(renderedOutputPixelBuffer, withPresentationTime: timestamp)
+            if !success {}
+        }
+    }
+
+    private func removeTemporaryVideoFileIfAny() {
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: temporaryVideoFileURL.path) {
+            try? fileManager.removeItem(at: temporaryVideoFileURL)
+        }
     }
 }

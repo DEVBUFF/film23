@@ -93,6 +93,7 @@ struct CameraControllersView: View {
                     }
                 }
                 
+                
                 if !isRecording {
                     Button {
                         setZoomFactor()

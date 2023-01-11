@@ -5,6 +5,7 @@
 //  Created by Igor Ryazancev on 05.01.2023.
 //
 
+import UIKit
 import SwiftUI
 
 struct CaptureVideoView: View {
@@ -14,6 +15,11 @@ struct CaptureVideoView: View {
     @State private var frameBottomPadding: CGFloat = 0.0
     @State private var editViewShowed = false
     @State private var videoUrl: URL?
+    @State private var origVideoUrl: URL?
+    @State private var hasNotch = UIDevice.current.hasNotch
+        
+    @State private var settingsShowed = false
+    @State private var filtersShowed = false
     
     var body: some View {
         ZStack {
@@ -27,6 +33,9 @@ struct CaptureVideoView: View {
                     if !isRecording {
                         FiltersControllerView(filters: model.filters, selectedIndex: $selectedFilterIndex)
                             .padding(.top, 70)
+                            .onTapGesture {
+                                filtersShowed = true
+                            }
                     }
                     
                     Spacer()
@@ -43,15 +52,18 @@ struct CaptureVideoView: View {
                         if isRecording {
                             model.startRecord()
                         } else {
-                            model.stopRecord { url in
+                            model.stopRecord { url, origUrl in
                                 videoUrl = url
+                                origVideoUrl = origUrl
                                 editViewShowed = true
                             }
                         }
                     }
                     
                     if !isRecording {
-                        VideoControllersView { cinematicEnabled in
+                        VideoControllersView { slowModeValue in
+                            model.setSlowMode(slowModeValue)
+                        } cinematicAction: { cinematicEnabled in
                             model.cinematic(isOn: cinematicEnabled)
                         } autoFocusAction: { autoFocusEnabled in
                             model.autoFocus(isOn: autoFocusEnabled)
@@ -72,6 +84,45 @@ struct CaptureVideoView: View {
                         }
                     }
                     .padding(.horizontal, 20)
+                } else {
+                    VStack {
+                        Text(model.recordingTime)
+                            .foregroundColor(.white)
+                            .font(.barlow(.regular, size: 14))
+                            .background(
+                                Capsule()
+                                    .foregroundColor(.black.opacity(0.7))
+                                    .padding(.vertical, -8)
+                                    .padding(.horizontal, -10)
+                            )
+                        Spacer()
+                    }
+                        .padding(.top, 56)
+                }
+                
+                if !isRecording {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            moreButtonView
+                        }
+                        .padding(.horizontal, 10)
+                        Spacer()
+                    }
+                    .padding(.top, 10)
+                }
+                
+            }
+            .fullScreenCover(isPresented: $settingsShowed) {
+                SettingsView()
+            }
+            
+            .fullScreenCover(isPresented: $filtersShowed) {
+                FiltersView { selectedFilter in
+                    if let index = model.filters.firstIndex(where: { $0.name == selectedFilter.name }) {
+                        selectedFilterIndex = index
+                        model.setSelectedFilter(with: index)
+                    }
                 }
             }
             .gesture(DragGesture(minimumDistance: 60, coordinateSpace: .global)
@@ -90,12 +141,37 @@ struct CaptureVideoView: View {
                 })
             
             if editViewShowed && videoUrl != nil {
-                EditVideoView(model: EditVideoViewModel(url: videoUrl!), showed: $editViewShowed)
+                EditVideoView(model: EditVideoViewModel(url: videoUrl!, origUrl: origVideoUrl), showed: $editViewShowed)
                     .transition(.opacity)
                     .edgesIgnoringSafeArea(.all)
-            }
-            
+            }            
         }
+        .edgesIgnoringSafeArea(.all)
         .statusBarHidden()
+    }
+    
+    @ViewBuilder
+    private var moreButtonView: some View {
+        Button {
+            settingsShowed = true
+        } label: {
+            EmptyView()
+        }
+        .buttonStyle(
+            StateableButton(change: { state in
+                ZStack {
+                    VisualEffectView(effect: UIBlurEffect(style: .dark))
+                        .frame(width: 50, height: 60)
+                        .cornerRadius(36, corners: [.topRight])
+                        .cornerRadius(6, corners: [.topLeft, .bottomLeft, .bottomRight])
+                    
+                    Text("MO\nRE")
+                        .font(.barlow(.regular, size: 12))
+                        .foregroundColor(.white)
+                }
+                .scaleEffect(state ? 0.99 : 1)
+            })
+            
+        )
     }
 }

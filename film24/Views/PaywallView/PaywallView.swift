@@ -10,7 +10,10 @@ import AVKit
 
 struct PaywallView: View {
     
+    @StateObject private var model = PaywallViewModel()
     @State private var selectedIndex = 0
+    
+    var action: ()->()
     
     var body: some View {
         ZStack(alignment: .top) {
@@ -33,7 +36,7 @@ struct PaywallView: View {
                     
                     VStack(alignment: .leading, spacing: 24) {
                         Button {
-                            
+                            action()
                         } label: {
                             EmptyView()
                         }
@@ -82,11 +85,22 @@ struct PaywallView: View {
                     
 
                 }
-                
-                
-                    
             }
             .padding(.horizontal, 40)
+            
+            VStack {
+                HStack {
+                    Spacer()
+                    
+                    Button {
+                        action()
+                    } label: {
+                        Image("close")
+                    }
+                    .frame(width: 44, height: 44)
+                }
+                Spacer()
+            }
         }
         
     }
@@ -159,7 +173,7 @@ struct PaywallView: View {
 #if DEBUG
 struct PaywallView_Previews: PreviewProvider {
     static var previews: some View {
-        PaywallView()
+        PaywallView {}
     }
 }
 #endif

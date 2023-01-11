@@ -10,15 +10,13 @@ import CoreImage
 class CaptureVideoViewModel: ObservableObject {
     @Published var error: Error?
     @Published var frame: CGImage?
+    @Published var recordingTime: String = "00:00"
+    
+    private let localFilesService = LocalFilesService()
     
     @Published var filters: [FilterModel] = [
-        FilterModel(name: "original", lutName: ""),
-        FilterModel(name: "demo", lutName: "demo.png"),
-        FilterModel(name: "demo2", lutName: "demo.png"),
-        FilterModel(name: "demo3", lutName: "demo.png"),
-        FilterModel(name: "demo4", lutName: "demo.png"),
+        FilterModel(name: "original", lutName: "")
     ]
-    
     
     var lutFilter: CIFilter?
     
@@ -26,17 +24,28 @@ class CaptureVideoViewModel: ObservableObject {
         didSet {
             guard let selectedFilter = selectedFilter else { return }
             let colorSpace: CGColorSpace = CGColorSpace.init(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
-            lutFilter = LUTsHelper.applyLUTsFilter(lutImage: selectedFilter.name, dimension: 64, colorSpace: colorSpace)
+            lutFilter = LUTsHelper.applyLUTsFilter(lutImage: selectedFilter.lutName, dimension: 64, colorSpace: colorSpace)
         }
     }
     
     private let context = CIContext()
-    
     private let cameraManager = CameraManager.shared
     private let frameManager = FrameManager.shared
+    
+    private var timer: Timer?
         
     init() {
         setupSubscriptions()
+        loadSections()
+    }
+    
+    func loadSections() {
+        if let json = localFilesService.readLocalJSONFile(forName: "filters_sections") {
+            let sections: [FiltersSectionModel] = localFilesService.parse(jsonData: json) ?? []
+            var locFilters: [FilterModel] = []
+            sections.forEach({ locFilters.append(contentsOf: $0.filters) })
+            filters.append(contentsOf: locFilters)
+        }
     }
     
     func setupSubscriptions() {
@@ -70,7 +79,29 @@ class CaptureVideoViewModel: ObservableObject {
             .assign(to: &$frame)
     }
     
+    func startUpdateRecordTime() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { [weak self] _ in
+            guard let `self` = self else { return }
+            self.msFrom(seconds: self.cameraManager.recordingSeconds) { minutes, seconds in
+                let minutes = self.getStringFrom(seconds: minutes)
+                let seconds = self.getStringFrom(seconds: seconds)
+                self.recordingTime = "\(minutes):\(seconds)"
+            }
+        })
+    }
     
+    func stopUpdateRecordTime() {
+        timer?.invalidate()
+        timer = nil
+    }
+    
+    func msFrom(seconds: Int, completion: @escaping (_ minutes: Int, _ seconds: Int)->()) {
+        completion((seconds % 3600) / 60, (seconds % 3600) % 60)
+    }
+
+    func getStringFrom(seconds: Int) -> String {
+        return seconds < 10 ? "0\(seconds)" : "\(seconds)"
+    }
 }
 
 //MARK: - Public methods
@@ -109,13 +140,24 @@ extension CaptureVideoViewModel {
         cameraManager.zoom(scale)
     }
     
-    func startRecord() {
-        cameraManager.recordVideo()
+    func setSlowMode(_ value: CGFloat) {
+        cameraManager.slowModeValue = value
     }
     
-    func stopRecord(completion: @escaping (URL)->Void) {
+    func startRecord() {
+        cameraManager.recordVideo(
+            context,
+            filterName: selectedFilter?.lutName ?? ""
+        )
+        startUpdateRecordTime()
+    }
+    
+    func stopRecord(completion: @escaping (URL, URL?)->Void) {
+        recordingTime = "00:00"
+        cameraManager.slowModeValue = 0
         cameraManager.stopRecording()
         cameraManager.recordedAction = completion
+        stopUpdateRecordTime()
     }
     
 }

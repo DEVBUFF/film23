@@ -15,10 +15,12 @@ struct VideoTrimmerView: UIViewRepresentable {
     
     var videoUrl: URL
     var player: AVPlayer
+    @Binding var progressTime: String
     
-    init(videoUrl: URL, player: AVPlayer) {
+    init(videoUrl: URL, player: AVPlayer, progressTime: Binding<String>) {
         self.videoUrl = videoUrl
         self.player = player
+        self._progressTime = progressTime
         
         self.asset = AVURLAsset(url: videoUrl, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
     }
@@ -69,6 +71,8 @@ struct VideoTrimmerView: UIViewRepresentable {
             videoTrimmer.progress = finalTime
         }
         
+        updateProgress()
+        
         return videoTrimmer
     }
     
@@ -76,6 +80,13 @@ struct VideoTrimmerView: UIViewRepresentable {
     
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
+    }
+    
+    func updateProgress() {
+        DispatchQueue.main.async {
+            let time = videoTrimmer.selectedRange.end - videoTrimmer.selectedRange.start
+            progressTime = time.displayString
+        }
     }
     
     class Coordinator: NSObject {
@@ -95,8 +106,8 @@ struct VideoTrimmerView: UIViewRepresentable {
         }
         
         @objc func didBeginTrimming(_ sender: VideoTrimmer) {
-    //        updateLabels()
-    //
+            parent.updateProgress()
+            
             wasPlaying = (parent.player.timeControlStatus != .paused)
             parent.player.pause()
     
@@ -104,8 +115,8 @@ struct VideoTrimmerView: UIViewRepresentable {
         }
 
         @objc func didEndTrimming(_ sender: VideoTrimmer) {
-    //        updateLabels()
-    //
+            parent.updateProgress()
+            
             if wasPlaying == true {
                 parent.player.play()
             }
@@ -114,31 +125,34 @@ struct VideoTrimmerView: UIViewRepresentable {
         }
 
         @objc func selectedRangeDidChanged(_ sender: VideoTrimmer) {
-    //        updateLabels()
+            parent.updateProgress()
         }
 
         @objc func didBeginScrubbing(_ sender: VideoTrimmer) {
-    //        updateLabels()
-    //
+            parent.updateProgress()
+            
             wasPlaying = (parent.player.timeControlStatus != .paused)
             parent.player.pause()
         }
 
         @objc func didEndScrubbing(_ sender: VideoTrimmer) {
-    //        updateLabels()
-    
+            parent.updateProgress()
+            
             if wasPlaying == true {
                 parent.player.play()
             }
         }
 
         @objc func progressDidChanged(_ sender: VideoTrimmer) {
-    //        updateLabels()
-    
+            parent.updateProgress()
+            
             let time = CMTimeSubtract(parent.videoTrimmer.progress, parent.videoTrimmer.selectedRange.start)
             parent.player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
         }
+        
+        
     }
     
+   
 
 }

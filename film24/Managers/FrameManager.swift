@@ -56,6 +56,16 @@ extension FrameManager: AVCaptureVideoDataOutputSampleBufferDelegate {
     didOutput sampleBuffer: CMSampleBuffer,
     from connection: AVCaptureConnection
   ) {
+      
+      if let formatDesc = CMSampleBufferGetFormatDescription(sampleBuffer)  {
+          let mediaType = CMFormatDescriptionGetMediaType(formatDesc)
+          if mediaType == kCMMediaType_Audio {
+              CameraManager.shared.handleAudioSampleBuffer(buffer: sampleBuffer)
+          } else if mediaType == kCMMediaType_Video {
+              CameraManager.shared.handleVideoSampleBuffer(buffer: sampleBuffer)
+          }
+      }
+      
     if let buffer = sampleBuffer.imageBuffer {
       DispatchQueue.main.async {
         self.current = buffer

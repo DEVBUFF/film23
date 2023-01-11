@@ -9,10 +9,19 @@ import SwiftUI
 
 @main
 struct film24App: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
+    @State var videoShow = false
+    
     var body: some Scene {
         WindowGroup {
-            CaptureVideoView()
-//            PaywallView()
+            if videoShow {
+                CaptureVideoView()
+            } else {
+                PaywallView {
+                    videoShow = true
+                }
+            }
         }
     }
 }

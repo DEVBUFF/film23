@@ -14,7 +14,7 @@ struct FiltersControllerView: View {
     
     var body: some View {
         ZStack {
-            Carousel(spacing: 25, trailingSpace: 170, index: $selectedIndex, items: filters) { filter in
+            Carousel(spacing: 20, trailingSpace: 160, index: $selectedIndex, items: filters) { filter in
                 Text(filter.name.uppercased())
                     .font(.barlow(.medium, size: 14))
             }

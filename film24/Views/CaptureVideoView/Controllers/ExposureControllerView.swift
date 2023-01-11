@@ -30,11 +30,11 @@ struct ExposureControllerView: View {
                                 loc = -225
                             }
                             
-                            let val = ((loc/100) / (225/100)*100)/30
+                            let val = ((loc/100) / (225/100)*100)/50
                             
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                             
-                            value = CGFloat(roundf(Float(val) * 2.0) * 0.3)
+                            value = CGFloat(val)
                             
                             valueChangedAction(value)
                         })
