@@ -84,6 +84,22 @@ struct FiltersView: View {
                                                     presentationMode.wrappedValue.dismiss()
                                                 }
                                             
+                                            VStack {
+                                                Spacer()
+                                                ZStack {
+                                                    Rectangle()
+                                                        .frame(height: 24)
+                                                        .foregroundColor(.second)
+                                                        .cornerRadius(8, corners: [.bottomLeft, .bottomRight])
+                                                    
+                                                    Text(filter.name.uppercased())
+                                                        .foregroundColor(.black)
+                                                        .font(.barlow(.medium, size: 10))
+                                                }
+                                                
+                                                
+                                            }
+                                            
                                             if filter.isFavorite {
                                                 HStack {
                                                     Spacer()

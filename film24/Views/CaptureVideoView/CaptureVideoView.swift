@@ -16,26 +16,33 @@ struct CaptureVideoView: View {
     @State private var editViewShowed = false
     @State private var videoUrl: URL?
     @State private var origVideoUrl: URL?
-    @State private var hasNotch = UIDevice.current.hasNotch
+    private var hasTopNotch: Bool = (UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0) > 0
         
     @State private var settingsShowed = false
     @State private var filtersShowed = false
+    @State private var showPrompt = false
     
     var body: some View {
         ZStack {
             ZStack {
-                FrameView(image: model.frame, bottomPadding: $frameBottomPadding) { location in
-                    model.focus(location)
+                FrameView(image: model.frame, bottomPadding: $frameBottomPadding) { location, vSize in
+                    model.focus(location, vSize: vSize)
                 }
                 .edgesIgnoringSafeArea(.all)
                 
                 VStack(alignment: .center, spacing: 24) {
                     if !isRecording {
-                        FiltersControllerView(filters: model.filters, selectedIndex: $selectedFilterIndex)
-                            .padding(.top, 70)
-                            .onTapGesture {
-                                filtersShowed = true
+                        VStack(spacing: 16) {
+                            FiltersControllerView(filters: model.filters, selectedIndex: $selectedFilterIndex)
+                                .padding(.top, 70)
+                                .onTapGesture {
+                                    filtersShowed = true
+                                }
+                            if showPrompt {
+                                PrompmtView()
                             }
+                        }
+                        
                     }
                     
                     Spacer()
@@ -63,8 +70,8 @@ struct CaptureVideoView: View {
                     if !isRecording {
                         VideoControllersView { slowModeValue in
                             model.setSlowMode(slowModeValue)
-                        } cinematicAction: { cinematicEnabled in
-                            model.cinematic(isOn: cinematicEnabled)
+                        } cinematicAction: { cinematicMode in
+                            model.cinematic(cinematicMode)
                         } autoFocusAction: { autoFocusEnabled in
                             model.autoFocus(isOn: autoFocusEnabled)
                         }
@@ -106,10 +113,24 @@ struct CaptureVideoView: View {
                             Spacer()
                             moreButtonView
                         }
-                        .padding(.horizontal, 10)
+                        .padding([.trailing, .top], 10)
                         Spacer()
                     }
-                    .padding(.top, 10)
+                    .padding(.top, 2)
+                }
+                
+            }
+            .onAppear {
+                if settings.isFirstLaunch {
+                    withAnimation {
+                        showPrompt = true
+                    }
+                    settings.isFirstLaunch = false
+                    DispatchQueue.main.asyncAfter(deadline: .now()+3) {
+                        withAnimation {
+                            showPrompt = false
+                        }
+                    }
                 }
                 
             }
@@ -171,7 +192,21 @@ struct CaptureVideoView: View {
                 }
                 .scaleEffect(state ? 0.99 : 1)
             })
-            
         )
     }
+}
+
+struct PrompmtView: View {
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Image("prompt_arrow")
+            
+            Text("To open list of filters,\npress on the filter".uppercased())
+                .font(.barlow(.regular, size: 12))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+        }
+    }
+    
 }

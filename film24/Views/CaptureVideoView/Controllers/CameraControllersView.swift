@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct CameraControllersView: View {
     
@@ -32,13 +33,19 @@ struct CameraControllersView: View {
             case .mid:
                 return 2
             case .max:
-                return 3
+                return 4
             }
         }
     }
     
     @State private var zoomFactor: CameraZoomFactor = .mid
     @State private var isRecording = false
+    @State private var isBackCameraPosition = true
+    @State private var appear = false
+    
+    var isTripleCamera: Bool {
+        return AVCaptureDevice.default(.builtInTripleCamera, for: .video, position: .back) != nil
+    }
     
     var changedPosition: ()->()
     var zoomAction: (CGFloat)->()
@@ -49,6 +56,7 @@ struct CameraControllersView: View {
             HStack(spacing: 40) {
                 if !isRecording {
                     Button {
+                        isBackCameraPosition.toggle()
                         zoomFactor = .mid
                         changedPosition()
                     } label: {
@@ -76,6 +84,13 @@ struct CameraControllersView: View {
                             Image("stop")
                                 .resizable()
                                 .frame(width: 88, height: 88)
+                                .rotationEffect(Angle(degrees: appear ? 360 : 0))
+                                .onAppear(perform: {
+                                    withAnimation(Animation.linear(duration: 15).repeatForever(autoreverses: false)) {
+                                        appear.toggle()
+                                    }
+                                })
+                                
                             Circle()
                                 .frame(width: 68, height: 68)
                                 .background(Circle().fill(Color.main))
@@ -85,6 +100,7 @@ struct CameraControllersView: View {
                                 .cornerRadius(4)
                         }
                         
+                        .padding(.bottom, -15)
                     } else {
                         Circle()
                             .stroke(.white, lineWidth: 3)
@@ -97,7 +113,7 @@ struct CameraControllersView: View {
                 if !isRecording {
                     Button {
                         setZoomFactor()
-                        zoomAction(zoomFactor.value)
+                        zoomAction(isBackCameraPosition && isTripleCamera ? zoomFactor.value : zoomFactor.value-1)
                     } label: {
                         EmptyView()
                     }
@@ -127,7 +143,7 @@ struct CameraControllersView: View {
         case .mid:
             zoomFactor = .max
         case .max:
-            zoomFactor = .min
+            zoomFactor = isBackCameraPosition && isTripleCamera ? .min : .mid
         }
     }
 }

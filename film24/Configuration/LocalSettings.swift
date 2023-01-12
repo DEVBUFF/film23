@@ -11,6 +11,7 @@ final class LocalSettings {
     
     //MARK: - AppSettings
     private struct Keys {
+        static let kIsFirstLaunch = "kIsFirstLaunch"
         static let kOnboardShowed = "kOnboardShowed"
         static let kSaveOriginal = "kSaveOriginal"
         static let kFavoriteFilters = "kFavoritesFilters"
@@ -29,6 +30,15 @@ final class LocalSettings {
 
 //MARK: - Public methods
 extension LocalSettings {
+    
+    var isFirstLaunch: Bool {
+        get {
+            return LocalSettings.value(for: LocalSettings.Keys.kIsFirstLaunch) ?? true
+        }
+        set {
+            LocalSettings.set(value: newValue, for: LocalSettings.Keys.kIsFirstLaunch)
+        }
+    }
     
     var onboardShowed: Bool {
         get {

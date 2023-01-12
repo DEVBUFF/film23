@@ -126,10 +126,21 @@ class CameraManager: NSObject, ObservableObject {
             session.commitConfiguration()
         }
         
-        device = primaryVideoDevice(forPosition: cameraPosition)
+        let deviceTypes: [AVCaptureDevice.DeviceType]
+        deviceTypes = [.builtInTripleCamera, .builtInDualWideCamera, .builtInDualCamera, .builtInWideAngleCamera]
         
-        if device == nil {
-            device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: cameraPosition)
+        let discoverySession = AVCaptureDevice.DiscoverySession(
+            deviceTypes: deviceTypes,
+            mediaType: .video,
+            position: cameraPosition
+        )
+        
+        device = discoverySession.devices.first
+        
+        if cameraPosition == .back && device?.deviceType == .builtInTripleCamera {
+            defaultZoomFactor = 2
+        } else {
+            defaultZoomFactor = 1
         }
         
         guard let camera = device else {
@@ -228,78 +239,76 @@ class CameraManager: NSObject, ObservableObject {
             try! camera.lockForConfiguration()
             camera.focusMode = .continuousAutoFocus
             camera.unlockForConfiguration()
-        } else {
+        } else if camera.isFocusModeSupported(.locked) {
             try! camera.lockForConfiguration()
             camera.focusMode = .locked
+            camera.unlockForConfiguration()
+        } else if camera.isFocusModeSupported(.autoFocus) {
+            try! camera.lockForConfiguration()
+            camera.focusMode = .autoFocus
             camera.unlockForConfiguration()
         }
     }
     
-    func cinematic(isOn: Bool) {
-        if videoConnection?.isVideoStabilizationSupported == true {
-            videoConnection?.preferredVideoStabilizationMode = isOn ? .cinematic : .standard
+    func cinematic(_ cinematicMode: VideoControllersView.CinematicMode) {
+        guard videoConnection?.isVideoStabilizationSupported == true else { return }
+        
+        switch cinematicMode {
+        case .off:
+            videoConnection?.preferredVideoStabilizationMode = .off
+        case .standard:
+            videoConnection?.preferredVideoStabilizationMode = .standard
+        case .cinematic:
+            videoConnection?.preferredVideoStabilizationMode = .cinematic
         }
     }
     
     func exposure(_ value: CGFloat) {
         guard let camera = device else { return }
         
-        let newExposureTargetOffset = Float(value)
-                print("Offset is : \(newExposureTargetOffset)")
-
-                let currentISO = device?.iso
-                var biasISO = 0
-
-                //Assume 0,01 as our limit to correct the ISO
-                if newExposureTargetOffset > 0.01 { //decrease ISO
-                    biasISO = -500
-                } else if newExposureTargetOffset < -0.01 { //increase ISO
-                    biasISO = 500
-                }
-
-        if biasISO != Int(0) {
-            //Normalize ISO level for the current device
-            var newISO = currentISO! + Float(biasISO)
-            newISO = newISO > (device?.activeFormat.maxISO)! ? (device?.activeFormat.maxISO)! : newISO
-            newISO = newISO < (device?.activeFormat.minISO)! ? (device?.activeFormat.minISO)! : newISO
-            
-        print(newISO)
-            if camera.isExposureModeSupported(.custom) {
-                do{
-                    try camera.lockForConfiguration()
-                    camera.setExposureModeCustom(duration: AVCaptureDevice.currentExposureDuration, iso: newISO)
-                    camera.unlockForConfiguration()
-                }
-                catch{
-                    print("ERROR: \(String(describing: error.localizedDescription))")
-                }
-            }
+        
+        let minBias = camera.minExposureTargetBias
+        let maxBias = camera.maxExposureTargetBias
+        
+        let newBias = max(minBias, min(Float(value*1.5), maxBias))
+        
+        do{
+            try camera.lockForConfiguration()
+            camera.setExposureTargetBias(newBias)
+            camera.unlockForConfiguration()
+        }
+        catch{
+            print("ERROR: \(String(describing: error.localizedDescription))")
         }
     }
     
-    func focus(_ point: CGPoint) {
+    func focus(_ point: CGPoint, vSize: CGSize) {
         guard let camera = device else { return }
         guard cameraPosition == .back else { return }
         
-        let focus_x = point.x / UIScreen.main.bounds.width
-        let focus_y = point.y / UIScreen.main.bounds.height
+        let focus_x = (vSize.width-point.x) / vSize.width
+        let focus_y = (point.y) / vSize.height
         
-        let points = CGPoint(x: focus_x, y: focus_y)
+        let points = CGPoint(x: focus_y, y: focus_x)
         
         do{
             try camera.lockForConfiguration()
             if camera.isFocusModeSupported(.autoFocus) {
+                camera.focusPointOfInterest = points
                 camera.focusMode = .autoFocus
-                camera.focusPointOfInterest = points
+                
             } else if camera.isFocusModeSupported(.continuousAutoFocus) {
-                camera.focusMode = .continuousAutoFocus
                 camera.focusPointOfInterest = points
+                camera.focusMode = .continuousAutoFocus
+                
             }
-            
+
             if (camera.isExposureModeSupported(.autoExpose) && camera.isExposurePointOfInterestSupported) {
-                camera.exposureMode = .autoExpose
                 camera.exposurePointOfInterest = points
+                camera.exposureMode = .autoExpose
+                
             }
+            //camera.setFocusModeLocked(lensPosition: <#T##Float#>)
             camera.unlockForConfiguration()
         }
         catch{
@@ -316,9 +325,10 @@ class CameraManager: NSObject, ObservableObject {
             var minZoomFactor: CGFloat = camera.minAvailableVideoZoomFactor
             let maxZoomFactor: CGFloat = camera.maxAvailableVideoZoomFactor
             
-            if camera.deviceType == .builtInDualWideCamera ||
-                camera.deviceType == .builtInTripleCamera ||
-                camera.deviceType == .builtInUltraWideCamera {
+            if camera.deviceType == .builtInTripleCamera  {
+                minZoomFactor = 0.5
+            } else if camera.deviceType == .builtInDualWideCamera ||
+                        camera.deviceType == .builtInUltraWideCamera {
                 minZoomFactor = 1
             }
             let zoomScale = max(minZoomFactor, min(scale, maxZoomFactor))
@@ -360,7 +370,7 @@ private extension CameraManager {
         
         if hasUltraWideCamera && position == .back {
             defaultZoomFactor = 2.0
-            let deviceTypes: [AVCaptureDevice.DeviceType] = [AVCaptureDevice.DeviceType.builtInUltraWideCamera]
+            let deviceTypes: [AVCaptureDevice.DeviceType] = [.builtInUltraWideCamera, .builtInTripleCamera, .builtInDualWideCamera]
             let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: AVMediaType.video, position: position)
             return discoverySession.devices.first
         }
@@ -639,6 +649,7 @@ extension CameraManager {
                 let outputURL = assetExport!.outputURL
                 DispatchQueue.main.async(execute: {
                     self.recordedAction?(outputURL!, self.origVideoURL)
+                    self.slowModeValue = 0.0
                 })
             case .none:
                 break

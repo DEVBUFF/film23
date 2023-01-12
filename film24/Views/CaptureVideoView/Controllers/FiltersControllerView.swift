@@ -26,6 +26,6 @@ struct FiltersControllerView: View {
         .mask(
             LinearGradient(gradient: Gradient(colors: [.black, .black, .black, .clear]), startPoint: .trailing, endPoint: .leading)
         )
-        .frame(width: 230)
+        .frame(width: 230, height: 20)
     }
 }

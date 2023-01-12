@@ -124,16 +124,16 @@ extension CaptureVideoViewModel {
         cameraManager.autoFocus(isOn: isOn)
     }
     
-    func cinematic(isOn: Bool) {
-        cameraManager.cinematic(isOn: isOn)
+    func cinematic(_ cinematicMode: VideoControllersView.CinematicMode) {
+        cameraManager.cinematic(cinematicMode)
     }
     
     func exposureChanged(_ value: CGFloat) {
         cameraManager.exposure(value)
     }
     
-    func focus(_ point: CGPoint) {
-        cameraManager.focus(point)
+    func focus(_ point: CGPoint, vSize: CGSize) {
+        cameraManager.focus(point, vSize: vSize)
     }
     
     func zoom(_ scale: CGFloat) {
@@ -154,10 +154,10 @@ extension CaptureVideoViewModel {
     
     func stopRecord(completion: @escaping (URL, URL?)->Void) {
         recordingTime = "00:00"
-        cameraManager.slowModeValue = 0
         cameraManager.stopRecording()
         cameraManager.recordedAction = completion
         stopUpdateRecordTime()
+       // cameraManager.slowModeValue = 0
     }
     
 }

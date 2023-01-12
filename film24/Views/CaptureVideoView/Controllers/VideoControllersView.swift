@@ -19,9 +19,9 @@ struct VideoControllersView: View {
             case .off:
                 return "OFF"
             case .twenty:
-                return "20%"
+                return "NORMAL"
             case .fifty:
-                return "55%"
+                return "DRAMA"
             }
         }
         
@@ -37,24 +37,41 @@ struct VideoControllersView: View {
         }
     }
     
+    enum CinematicMode {
+        case off
+        case standard
+        case cinematic
+        
+        var name: String {
+            switch self {
+            case .off:
+                return "OFF"
+            case .standard:
+                return "STANDARD"
+            case .cinematic:
+                return "CINEMATIC"
+            }
+        }
+    }
+    
     @State private var autoFocusEnabled = true
-    @State private var cinematicEnabled = false
-    @State private var hasNotch = UIDevice.current.hasNotch
+    @State private var cinematicMode: CinematicMode = .standard
+    @State private var hasNotch = (UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0) > 0
     @State private var slowMode: SlowMode = .off
     
     var slowModeAction: (CGFloat)->()
-    var cinematicAction: (Bool)->()
+    var cinematicAction: (CinematicMode)->()
     var autoFocusAction: (Bool)->()
     
     var body: some View {
-        ZStack() {
+        ZStack(alignment: .top) {
             VisualEffectView(effect: UIBlurEffect(style: .dark))
-                .cornerRadius(20, corners: [.topLeft, .topRight])
+                .cornerRadius(10, corners: [.topLeft, .topRight])
                 .cornerRadius(hasNotch ? 46 : 0, corners: [.bottomLeft, .bottomRight])
                 .padding(2)
             
             HStack {
-                VStack(spacing: 12) {
+                VStack(spacing: 5) {
                     Text("SLOWLY")
                         .foregroundColor(.white.opacity(0.3))
                         .font(.barlow(.medium, size: 11))
@@ -67,22 +84,22 @@ struct VideoControllersView: View {
                     .buttonStyle(
                         StateableButton(change: { _ in
                             Text(slowMode.name)
-                                .foregroundColor(.white)
+                                .foregroundColor(slowMode == .off ? .white : .black)
                                 .font(.barlow(.medium, size: 12))
                                 .background(
                                     Capsule()
-                                        .foregroundColor(.black)
-                                        .padding(.vertical, -7.5)
+                                        .foregroundColor(slowMode == .off ? .black : .second)
                                         .padding(.horizontal, -10)
+                                        .frame(height: 24)
                                 )
                         })
                     )
-                    .frame(width: 30, height: 30)
+                    .frame(width: 70, height: 40)
                     
                 }
                 Spacer()
                 
-                VStack(spacing: 12) {
+                VStack(spacing: 5) {
                     Text("AUTO FOCUS")
                         .foregroundColor(.white.opacity(0.3))
                         .font(.barlow(.medium, size: 11))
@@ -95,52 +112,52 @@ struct VideoControllersView: View {
                     .buttonStyle(
                         StateableButton(change: { _ in
                             Text(autoFocusEnabled ? "ON" : "OFF")
-                                .foregroundColor(.white)
+                                .foregroundColor(autoFocusEnabled ? .black : .white)
                                 .font(.barlow(.medium, size: 12))
                                 .background(
                                     Capsule()
-                                        .foregroundColor(.black)
-                                        .padding(.vertical, -7.5)
+                                        .foregroundColor(autoFocusEnabled ? .second : .black)
+                                        .frame(height: 24)
                                         .padding(.horizontal, -10)
                                 )
                         })
                     )
-                    .frame(width: 30, height: 30)
+                    .frame(width: 70, height: 40)
                     
                 }
             }
             .padding(.horizontal, 40)
-            .padding(.bottom, 20)
+            .padding(.top, 20)
             
-            VStack(spacing: 12) {
+            VStack(spacing: 5) {
                 Text("STABILIZATION")
                     .foregroundColor(.white.opacity(0.3))
                     .font(.barlow(.medium, size: 11))
                 Button {
-                    cinematicEnabled.toggle()
-                    cinematicAction(cinematicEnabled)
+                    setCinematicMode()
+                    cinematicAction(cinematicMode)
                 } label: {
                     EmptyView()
                 }
                 .buttonStyle(
                     StateableButton(change: { _ in
-                        Text("CINEMATIC")
-                            .foregroundColor(.white)
+                        Text(cinematicMode.name)
+                            .foregroundColor(cinematicMode == .off ? .white : .black)
                             .font(.barlow(.medium, size: 12))
                             .background(
                                 Capsule()
-                                    .foregroundColor(cinematicEnabled ? .second : .black)
-                                    .padding(.vertical, -7.5)
+                                    .foregroundColor(cinematicMode == .off ? .black : .second)
+                                    .frame(height: 24)
                                     .padding(.horizontal, -10)
                             )
                     })
                 )
-                .frame(width: 100, height: 30)
+                .frame(width: 100, height: 40)
                 
             }
-            .padding(.bottom, 20)
+            .padding(.top, 20)
         }
-        .frame(height: 120)
+        .frame(height: 100)
         .ignoresSafeArea(.all)
     }
     
@@ -152,6 +169,17 @@ struct VideoControllersView: View {
             slowMode = .fifty
         case .fifty:
             slowMode = .off
+        }
+    }
+    
+    func setCinematicMode() {
+        switch cinematicMode {
+        case .off:
+            cinematicMode = .standard
+        case .standard:
+            cinematicMode = .cinematic
+        case .cinematic:
+            cinematicMode = .off
         }
     }
     
