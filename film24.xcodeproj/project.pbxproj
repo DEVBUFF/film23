@@ -108,7 +108,6 @@
 		6BD10EA6296D26380010B49E /* OnClickGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD10EA5296D26380010B49E /* OnClickGesture.swift */; };
 		6BD10EA9296D29210010B49E /* TPInAppReceipt in Frameworks */ = {isa = PBXBuildFile; productRef = 6BD10EA8296D29210010B49E /* TPInAppReceipt */; };
 		6BD10EAB296D29530010B49E /* IAPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD10EAA296D29530010B49E /* IAPManager.swift */; };
-		6BD10EAE296D2E6D0010B49E /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6BD10EAD296D2E6D0010B49E /* StoreKit.framework */; };
 		6BD10EB0296D2F2E0010B49E /* PaywallViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD10EAF296D2F2E0010B49E /* PaywallViewModel.swift */; };
 		6BD10EB2296D33900010B49E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD10EB1296D33900010B49E /* AppDelegate.swift */; };
 		6BE997D32963FB3C001B8A83 /* film24App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE997D22963FB3C001B8A83 /* film24App.swift */; };
@@ -221,7 +220,6 @@
 		6BD0915B296FB98F00D69A19 /* PrecisionLevelSliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrecisionLevelSliderView.swift; sourceTree = "<group>"; };
 		6BD10EA5296D26380010B49E /* OnClickGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnClickGesture.swift; sourceTree = "<group>"; };
 		6BD10EAA296D29530010B49E /* IAPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IAPManager.swift; sourceTree = "<group>"; };
-		6BD10EAD296D2E6D0010B49E /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		6BD10EAF296D2F2E0010B49E /* PaywallViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallViewModel.swift; sourceTree = "<group>"; };
 		6BD10EB1296D33900010B49E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6BE997CF2963FB3C001B8A83 /* film24.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = film24.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -242,7 +240,6 @@
 			files = (
 				6BD10EA9296D29210010B49E /* TPInAppReceipt in Frameworks */,
 				6B370EE2296FC27F00FD5884 /* CoreGeometry in Frameworks */,
-				6BD10EAE296D2E6D0010B49E /* StoreKit.framework in Frameworks */,
 				6B370EDF296FC1F300FD5884 /* SmoothOperators in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -525,7 +522,6 @@
 		6BD10EAC296D2E6D0010B49E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				6BD10EAD296D2E6D0010B49E /* StoreKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -927,9 +923,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_ASSET_PATHS = "\"film24/Preview Content\"";
-				DEVELOPMENT_TEAM = 5TC86UV67D;
+				DEVELOPMENT_TEAM = T4AP35H5CT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = film24/Info.plist;
@@ -947,7 +943,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.buffny.apps.film24;
+				PRODUCT_BUNDLE_IDENTIFIER = com.devbuff.apps.film24;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -964,9 +960,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_ASSET_PATHS = "\"film24/Preview Content\"";
-				DEVELOPMENT_TEAM = 5TC86UV67D;
+				DEVELOPMENT_TEAM = T4AP35H5CT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = film24/Info.plist;
@@ -984,7 +980,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.buffny.apps.film24;
+				PRODUCT_BUNDLE_IDENTIFIER = com.devbuff.apps.film24;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;

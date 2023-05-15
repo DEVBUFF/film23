@@ -15,6 +15,9 @@ final class LocalSettings {
         static let kOnboardShowed = "kOnboardShowed"
         static let kSaveOriginal = "kSaveOriginal"
         static let kFavoriteFilters = "kFavoritesFilters"
+        static let kStabilization = "kStabilization"
+        static let kSlowly = "kSlowly"
+        static let kAutoFocus = "kAutoFocus"
     }
     
     //MARK: - Private methods
@@ -65,6 +68,49 @@ extension LocalSettings {
         set {
             LocalSettings.set(value: newValue, for: LocalSettings.Keys.kFavoriteFilters)
         }
+    }
+    
+    var stabilization: Stabilisation {
+        get {
+            return Stabilisation(rawValue: LocalSettings.value(for: LocalSettings.Keys.kStabilization) ?? "off") ?? .off
+        }
+        set {
+            LocalSettings.set(value: newValue.rawValue, for: LocalSettings.Keys.kStabilization)
+        }
+    }
+    
+    var autoFocus: Bool {
+        get {
+            return LocalSettings.value(for: LocalSettings.Keys.kSaveOriginal) ?? false
+        }
+        set {
+            LocalSettings.set(value: newValue, for: LocalSettings.Keys.kSaveOriginal)
+        }
+    }
+    
+    var slowly: Slowly {
+        get {
+            return Slowly(rawValue: LocalSettings.value(for: LocalSettings.Keys.kSlowly) ?? "off") ?? .off
+        }
+        set {
+            LocalSettings.set(value: newValue.rawValue, for: LocalSettings.Keys.kSlowly)
+        }
+    }
+    
+}
+
+extension LocalSettings {
+    
+    enum Stabilisation: String {
+        case off = "off"
+        case standard = "standard"
+        case cinematic = "cinematic"
+    }
+    
+    enum Slowly: String {
+        case off = "off"
+        case normal = "normal"
+        case drama = "drama"
     }
     
 }

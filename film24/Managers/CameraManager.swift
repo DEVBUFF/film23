@@ -23,7 +23,17 @@ class CameraManager: NSObject, ObservableObject {
     let session = AVCaptureSession()
     
     var cameraPosition: AVCaptureDevice.Position = .back
-    var slowModeValue: CGFloat = 0
+    var slowModeValue: CGFloat = 0 {
+        didSet {
+//            DispatchQueue.main.async { [weak self] in
+//                guard let `self` = self else { return }
+//                self.setFrameRate(self.slowModeValue != 0 ? 60 : 30) {
+//                    self.zoom(self.defaultZoomFactor)
+//                }
+//            }
+            
+        }
+    }
     private(set) var device: AVCaptureDevice?
     private var videoConnection: AVCaptureConnection?
     private let sessionQueue = DispatchQueue(label: "com.sessionQ")
@@ -137,7 +147,8 @@ class CameraManager: NSObject, ObservableObject {
         
         device = discoverySession.devices.first
         
-        if cameraPosition == .back && device?.deviceType == .builtInTripleCamera {
+        if cameraPosition == .back && device?.deviceType == .builtInTripleCamera ||
+            cameraPosition == .back && device?.deviceType == .builtInDualWideCamera {
             defaultZoomFactor = 2
         } else {
             defaultZoomFactor = 1
@@ -174,7 +185,6 @@ class CameraManager: NSObject, ObservableObject {
             videoConnection?.videoOrientation = .portrait
             videoConnection?.isVideoMirrored = cameraPosition == .back
             
-            
         } else {
             set(error: .cannotAddOutput)
             status = .failed
@@ -203,7 +213,11 @@ class CameraManager: NSObject, ObservableObject {
         
         status = .configured
         
-        zoom(defaultZoomFactor)
+        self.zoom(self.defaultZoomFactor)
+//        setFrameRate(30) { [weak self] in
+//            guard let `self` = self else { return }
+//            self.zoom(self.defaultZoomFactor)
+//        }
     }
     
     private func configure() {
@@ -250,7 +264,7 @@ class CameraManager: NSObject, ObservableObject {
         }
     }
     
-    func cinematic(_ cinematicMode: VideoControllersView.CinematicMode) {
+    func cinematic(_ cinematicMode: LocalSettings.Stabilisation) {
         guard videoConnection?.isVideoStabilizationSupported == true else { return }
         
         switch cinematicMode {
@@ -357,6 +371,46 @@ class CameraManager: NSObject, ObservableObject {
             return
         }
         self.videoFileOutput?.stopRecording()
+    }
+    
+    func setFrameRate(_ rate: Double, completion: @escaping ()->  Void) {
+        if let device {
+            guard rate == 60 else {
+                do {
+                    try device.lockForConfiguration()
+                    device.activeVideoMinFrameDuration = CMTime(value: 1, timescale: 30)
+                    device.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: 30)
+                    device.unlockForConfiguration()
+                    completion()
+                }
+                catch {
+                    print(error)
+                    completion()
+                }
+                return
+            }
+            
+            Task {
+                for vFormat in device.formats {
+                    let ranges = vFormat.videoSupportedFrameRateRanges as [AVFrameRateRange]
+                    let frameRates = ranges[0]
+                    
+                    if frameRates.maxFrameRate == rate {
+                        do {
+                            try device.lockForConfiguration()
+                            device.activeFormat = vFormat as AVCaptureDevice.Format
+                            device.activeVideoMinFrameDuration = frameRates.minFrameDuration
+                            device.activeVideoMaxFrameDuration = frameRates.maxFrameDuration
+                            device.unlockForConfiguration()
+                        }
+                        catch {
+                            print(error)
+                        }
+                    }
+                }
+                completion()
+            }
+        }
     }
     
 }

@@ -113,7 +113,7 @@ struct CameraControllersView: View {
                 if !isRecording {
                     Button {
                         setZoomFactor()
-                        zoomAction(isBackCameraPosition && isTripleCamera ? zoomFactor.value : zoomFactor.value-1)
+                        zoomAction(isBackCameraPosition && isTripleCamera ? zoomFactor.value : zoomFactor == .min ? zoomFactor.value-0.5 :  zoomFactor.value-1)
                     } label: {
                         EmptyView()
                     }
@@ -141,7 +141,7 @@ struct CameraControllersView: View {
         case .min:
             zoomFactor = .mid
         case .mid:
-            zoomFactor = .max
+            zoomFactor = isBackCameraPosition && isTripleCamera ? .max : .min
         case .max:
             zoomFactor = isBackCameraPosition && isTripleCamera ? .min : .mid
         }

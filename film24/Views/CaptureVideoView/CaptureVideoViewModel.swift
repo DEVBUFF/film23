@@ -124,7 +124,7 @@ extension CaptureVideoViewModel {
         cameraManager.autoFocus(isOn: isOn)
     }
     
-    func cinematic(_ cinematicMode: VideoControllersView.CinematicMode) {
+    func cinematic(_ cinematicMode: LocalSettings.Stabilisation) {
         cameraManager.cinematic(cinematicMode)
     }
     

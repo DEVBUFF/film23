@@ -8,59 +8,13 @@
 import SwiftUI
 
 struct VideoControllersView: View {
-    
-    enum SlowMode {
-        case off
-        case twenty
-        case fifty
-        
-        var name: String {
-            switch self {
-            case .off:
-                return "OFF"
-            case .twenty:
-                return "NORMAL"
-            case .fifty:
-                return "DRAMA"
-            }
-        }
-        
-        var value: CGFloat {
-            switch self {
-            case .off:
-                return 0
-            case .twenty:
-                return 1.4
-            case .fifty:
-                return 2
-            }
-        }
-    }
-    
-    enum CinematicMode {
-        case off
-        case standard
-        case cinematic
-        
-        var name: String {
-            switch self {
-            case .off:
-                return "OFF"
-            case .standard:
-                return "STANDARD"
-            case .cinematic:
-                return "CINEMATIC"
-            }
-        }
-    }
-    
-    @State private var autoFocusEnabled = true
-    @State private var cinematicMode: CinematicMode = .standard
+    @State private var autoFocusEnabled = settings.autoFocus
+    @State private var cinematicMode: LocalSettings.Stabilisation = settings.stabilization
     @State private var hasNotch = (UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0) > 0
-    @State private var slowMode: SlowMode = .off
+    @State private var slowMode: LocalSettings.Slowly = .off
     
     var slowModeAction: (CGFloat)->()
-    var cinematicAction: (CinematicMode)->()
+    var cinematicAction: (LocalSettings.Stabilisation)->()
     var autoFocusAction: (Bool)->()
     
     var body: some View {
@@ -105,6 +59,7 @@ struct VideoControllersView: View {
                         .font(.barlow(.medium, size: 11))
                     Button {
                         autoFocusEnabled.toggle()
+                        settings.autoFocus = autoFocusEnabled
                         autoFocusAction(autoFocusEnabled)
                     } label: {
                         EmptyView()
@@ -164,12 +119,14 @@ struct VideoControllersView: View {
     func changeSlowMode() {
         switch slowMode {
         case .off:
-            slowMode = .twenty
-        case .twenty:
-            slowMode = .fifty
-        case .fifty:
+            slowMode = .normal
+        case .normal:
+            slowMode = .drama
+        case .drama:
             slowMode = .off
         }
+        
+        settings.slowly = slowMode
     }
     
     func setCinematicMode() {
@@ -181,6 +138,46 @@ struct VideoControllersView: View {
         case .cinematic:
             cinematicMode = .off
         }
+        
+        settings.stabilization = cinematicMode
     }
     
 }
+
+extension LocalSettings.Stabilisation {
+    var name: String {
+        switch self {
+        case .off:
+            return "OFF"
+        case .standard:
+            return "STANDARD"
+        case .cinematic:
+            return "CINEMATIC"
+        }
+    }
+}
+
+extension LocalSettings.Slowly {
+    var name: String {
+        switch self {
+        case .off:
+            return "OFF"
+        case .normal:
+            return "NORMAL"
+        case .drama:
+            return "DRAMA"
+        }
+    }
+    
+    var value: CGFloat {
+        switch self {
+        case .off:
+            return 0
+        case .normal:
+            return 1.4
+        case .drama:
+            return 2
+        }
+    }
+}
+
