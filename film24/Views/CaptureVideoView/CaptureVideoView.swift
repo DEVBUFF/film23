@@ -7,6 +7,7 @@
 
 import UIKit
 import SwiftUI
+import PhotosUI
 
 struct CaptureVideoView: View {
     @StateObject private var model = CaptureVideoViewModel()
@@ -14,6 +15,7 @@ struct CaptureVideoView: View {
     @State private var isRecording = false
     @State private var frameBottomPadding: CGFloat = 0.0
     @State private var editViewShowed = false
+    @State private var fromGallery = false
     @State private var videoUrl: URL?
     @State private var origVideoUrl: URL?
     private var hasTopNotch: Bool = (UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0) > 0
@@ -21,6 +23,8 @@ struct CaptureVideoView: View {
     @State private var settingsShowed = false
     @State private var filtersShowed = false
     @State private var showPrompt = false
+    @State private var photoPickerShowed = false
+    @State private var galleryImage: UIImage?
     
     var body: some View {
         ZStack {
@@ -110,10 +114,11 @@ struct CaptureVideoView: View {
                 if !isRecording {
                     VStack {
                         HStack {
+                            galleryButtonView
                             Spacer()
                             moreButtonView
                         }
-                        .padding([.trailing, .top], 10)
+                        .padding([.trailing, .top, .leading], 10)
                         Spacer()
                     }
                     .padding(.top, 2)
@@ -133,6 +138,10 @@ struct CaptureVideoView: View {
                     }
                 }
                 
+                model.getGalleryImage { img in
+                    galleryImage = img
+                }
+                
             }
             .fullScreenCover(isPresented: $settingsShowed) {
                 SettingsView()
@@ -146,6 +155,14 @@ struct CaptureVideoView: View {
                     }
                 }
             }
+            .sheet(isPresented: $photoPickerShowed, content: {
+                ImagePickerView(showPicker: $photoPickerShowed, selectionLimit: 1) { url in
+                    videoUrl = url
+                    origVideoUrl = url
+                    editViewShowed = true
+                    fromGallery = true
+                }
+            })
             .gesture(DragGesture(minimumDistance: 60, coordinateSpace: .global)
                 .onEnded { value in
                     let horizontalAmount = value.translation.width
@@ -162,9 +179,14 @@ struct CaptureVideoView: View {
                 })
             
             if editViewShowed && videoUrl != nil {
-                EditVideoView(model: EditVideoViewModel(url: videoUrl!, origUrl: origVideoUrl), showed: $editViewShowed)
+                EditVideoView(model: EditVideoViewModel(url: videoUrl!, origUrl: origVideoUrl),
+                              showed: $editViewShowed,
+                              fromGallery: fromGallery)
                     .transition(.opacity)
                     .edgesIgnoringSafeArea(.all)
+                    .onDisappear {
+                        fromGallery = false
+                    }
             }            
         }
         .edgesIgnoringSafeArea(.all)
@@ -189,6 +211,35 @@ struct CaptureVideoView: View {
                     Text("MO\nRE")
                         .font(.barlow(.regular, size: 12))
                         .foregroundColor(.white)
+                }
+                .scaleEffect(state ? 0.99 : 1)
+            })
+        )
+    }
+    
+    @ViewBuilder
+    private var galleryButtonView: some View {
+        Button {
+            photoPickerShowed = true
+        } label: {
+            EmptyView()
+        }
+        .buttonStyle(
+            StateableButton(change: { state in
+                ZStack {
+                    VisualEffectView(effect: UIBlurEffect(style: .dark))
+                        .frame(width: 50, height: 60)
+                        .cornerRadius(36, corners: [.topLeft])
+                        .cornerRadius(6, corners: [.topRight, .bottomLeft, .bottomRight])
+                    
+                    if let galleryImage {
+                        Image(uiImage: galleryImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 40, height: 50)
+                            .cornerRadius(36, corners: [.topLeft])
+                            .cornerRadius(6, corners: [.topRight, .bottomLeft, .bottomRight])
+                    }
                 }
                 .scaleEffect(state ? 0.99 : 1)
             })

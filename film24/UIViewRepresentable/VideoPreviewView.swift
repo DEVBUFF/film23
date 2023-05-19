@@ -11,7 +11,7 @@ import AVKit
 struct VideoPreviewView: UIViewRepresentable {
     
     var url: URL
-    var player: AVPlayer
+    @Binding var player: AVPlayer
     var updated: Bool = false
     
     func updateUIView(_ uiView: EditPlayerUIView, context: Context) {

@@ -6,6 +6,8 @@
 //
 
 import CoreImage
+import Photos
+import UIKit.UIImage
 
 class CaptureVideoViewModel: ObservableObject {
     @Published var error: Error?
@@ -102,10 +104,38 @@ class CaptureVideoViewModel: ObservableObject {
     func getStringFrom(seconds: Int) -> String {
         return seconds < 10 ? "0\(seconds)" : "\(seconds)"
     }
+    
+    func fetchLatestPhotos(forCount count: Int?, completion: @escaping (UIImage?)->()) {
+        // Create fetch options.
+        let options = PHFetchOptions()
+        
+        // If count limit is specified.
+        if let count = count { options.fetchLimit = count }
+        
+        // Add sortDescriptor so the lastest photos will be returned.
+        let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: false)
+        options.sortDescriptors = [sortDescriptor]
+        
+        guard let asset = PHAsset.fetchAssets(with: .image, options: options).firstObject else {
+            return
+        }
+        
+        PHImageManager.default().requestImage(for: asset,
+                                              targetSize: CGSize(width: 100, height: 100),
+                                              contentMode: .aspectFill,
+                                              options: nil) { (image, _) in
+            completion(image)
+        }
+    }
+    
 }
 
 //MARK: - Public methods
 extension CaptureVideoViewModel {
+    
+    func getGalleryImage(completion: @escaping (UIImage?)->()) {
+        fetchLatestPhotos(forCount: 1, completion: completion)
+    }
     
     func setSelectedFilter(with index: Int) {
         let newFilter = filters[index]

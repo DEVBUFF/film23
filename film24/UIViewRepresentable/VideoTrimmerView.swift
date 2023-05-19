@@ -16,11 +16,13 @@ struct VideoTrimmerView: UIViewRepresentable {
     var videoUrl: URL
     var player: AVPlayer
     @Binding var progressTime: String
+    var playerDidFinish: (()->())?
     
-    init(videoUrl: URL, player: AVPlayer, progressTime: Binding<String>) {
+    init(videoUrl: URL, player:  AVPlayer, progressTime: Binding<String>, playerDidFinish: (()->())? = nil) {
         self.videoUrl = videoUrl
         self.player = player
         self._progressTime = progressTime
+        self.playerDidFinish = playerDidFinish
         
         self.asset = AVURLAsset(url: videoUrl, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
     }
@@ -65,6 +67,14 @@ struct VideoTrimmerView: UIViewRepresentable {
                 action: #selector(Coordinator.progressDidChanged(_:)),
                 for: VideoTrimmer.progressChanged
             )
+        
+        NotificationCenter.default
+            .addObserver(
+                context.coordinator,
+                selector: #selector(Coordinator.playerDidFinishPlaying),
+                name: .AVPlayerItemDidPlayToEndTime,
+                object: player.currentItem
+        )
         
         player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 30), queue: .main) { time in
             let finalTime = videoTrimmer.trimmingState == .none ? CMTimeAdd(time, videoTrimmer.selectedRange.start) : time
@@ -148,6 +158,10 @@ struct VideoTrimmerView: UIViewRepresentable {
             
             let time = CMTimeSubtract(parent.videoTrimmer.progress, parent.videoTrimmer.selectedRange.start)
             parent.player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
+        }
+        
+        @objc func playerDidFinishPlaying() {
+            parent.playerDidFinish?()
         }
         
         
