@@ -11,6 +11,7 @@ import PhotosUI
 struct ImagePickerView: UIViewControllerRepresentable {
     
     @Binding var showPicker: Bool
+    @Binding var loading: Bool
     var selectionLimit: Int
     
     var videoSelected: ((URL?)->())
@@ -39,10 +40,10 @@ struct ImagePickerView: UIViewControllerRepresentable {
         }
         
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-            
             parent.showPicker.toggle()
             
             for result in results {
+                parent.loading = true
                 let prov = result.itemProvider
                 prov.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, err in
                     guard let url = url else { return }
@@ -58,6 +59,7 @@ struct ImagePickerView: UIViewControllerRepresentable {
                         try FileManager.default.copyItem(at: url, to: targetURL)
                         
                         DispatchQueue.main.sync { [weak self] in
+                            self?.parent.loading = false
                             self?.parent.videoSelected(targetURL)
                         }
                     } catch {

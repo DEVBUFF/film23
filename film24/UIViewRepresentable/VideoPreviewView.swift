@@ -9,27 +9,43 @@ import SwiftUI
 import AVKit
 
 struct VideoPreviewView: UIViewRepresentable {
+  
     
     var url: URL
     @Binding var player: AVPlayer
-    var updated: Bool = false
-    
+    @Binding var progressTime: String
+   
     func updateUIView(_ uiView: EditPlayerUIView, context: Context) {
         if uiView.player.currentItem?.url != url {
             uiView.updatePlayerItem(with: url)
+            
         } else {
-            uiView.player.play()
+           // uiView.player.play()
         }
-        if updated {
-            uiView.player.play()
-        }
+//        if updated {
+//            uiView.player.play()
+//        }
     }
 
     func makeUIView(context: Context) -> EditPlayerUIView {
         let playerView = EditPlayerUIView(url: url, player: player)
         playerView.isUserInteractionEnabled = true
+        addObservers()
         return playerView
     }
+    
+    private func addObservers() {
+        self.player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1, preferredTimescale: 1), queue: DispatchQueue.main, using: { (time) in
+            if self.player.currentItem?.status == .readyToPlay {
+                let currentTime = CMTimeGetSeconds(self.player.currentTime())
+                
+                let secs = Int(currentTime)
+                self.progressTime = NSString(format: "%02d:%02d", secs/60, secs%60) as String//"\(secs/60):\(secs%60)"
+                
+            }
+        })
+    }
+    
 }
 
 class EditPlayerUIView: UIView {
@@ -40,7 +56,6 @@ class EditPlayerUIView: UIView {
     
     deinit {
         print("🚀 PlayerUIView deinited")
-        removeAllObservers()
     }
 
     init(url: URL, player: AVPlayer, playWhenLoad: Bool = true) {
@@ -55,9 +70,7 @@ class EditPlayerUIView: UIView {
     public func updatePlayerItem(with url: URL) {
         let asset = AVURLAsset(url: url)
         let item = AVPlayerItem(asset: asset)
-        removeAllObservers()
         player.replaceCurrentItem(with: item)
-        addObservers()
     }
     
     private func setupPlayer(with url: URL) {
@@ -78,16 +91,7 @@ class EditPlayerUIView: UIView {
         playerLayer.player = player
         playerLayer.videoGravity = .resizeAspectFill
         
-        addObservers()
         layer.insertSublayer(playerLayer, at: 0)
-    }
-    
-    private func addObservers() {
-        
-    }
-    
-    func removeAllObservers() {
-        NotificationCenter.default.removeObserver(self)
     }
 
     required init?(coder: NSCoder) {

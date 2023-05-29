@@ -49,6 +49,7 @@
 		6B24EC9E296FC18C00CD0410 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B24EC76296FC18C00CD0410 /* Utils.swift */; };
 		6B370EDF296FC1F300FD5884 /* SmoothOperators in Frameworks */ = {isa = PBXBuildFile; productRef = 6B370EDE296FC1F300FD5884 /* SmoothOperators */; };
 		6B370EE2296FC27F00FD5884 /* CoreGeometry in Frameworks */ = {isa = PBXBuildFile; productRef = 6B370EE1296FC27F00FD5884 /* CoreGeometry */; };
+		6B52A65B2A1CDDB300746C4F /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B52A65A2A1CDDB300746C4F /* LoadingView.swift */; };
 		6BA3342529668176003C83F1 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA3342429668176003C83F1 /* PaywallView.swift */; };
 		6BA3342829668213003C83F1 /* 1.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6BA3342729668213003C83F1 /* 1.mp4 */; };
 		6BA3342C2966861F003C83F1 /* VideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA3342B2966861F003C83F1 /* VideoView.swift */; };
@@ -162,6 +163,7 @@
 		6B24EC74296FC18C00CD0410 /* RulerCellView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RulerCellView.swift; sourceTree = "<group>"; };
 		6B24EC75296FC18C00CD0410 /* NativeCursorBody.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NativeCursorBody.swift; sourceTree = "<group>"; };
 		6B24EC76296FC18C00CD0410 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		6B52A65A2A1CDDB300746C4F /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		6BA3342429668176003C83F1 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		6BA3342729668213003C83F1 /* 1.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = 1.mp4; sourceTree = "<group>"; };
 		6BA3342B2966861F003C83F1 /* VideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoView.swift; sourceTree = "<group>"; };
@@ -364,6 +366,7 @@
 				6BA33439296697C2003C83F1 /* StateableButton.swift */,
 				6BCDFE6129681FDF007E48A5 /* CarouselView.swift */,
 				6BA3343629668D80003C83F1 /* PagerView.swift */,
+				6B52A65A2A1CDDB300746C4F /* LoadingView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -795,6 +798,7 @@
 				6BCDFE6B296870F0007E48A5 /* EditVideoView.swift in Sources */,
 				6BCDFE5D29681A0A007E48A5 /* FiltersControllerView.swift in Sources */,
 				6B24EC9C296FC18C00CD0410 /* RulerCellView.swift in Sources */,
+				6B52A65B2A1CDDB300746C4F /* LoadingView.swift in Sources */,
 				6BA3344B2966ABB5003C83F1 /* CaptureVideoViewModel.swift in Sources */,
 				6BA334432966AA08003C83F1 /* CameraManager.swift in Sources */,
 				6B24EC77296FC18C00CD0410 /* SlidingRuler.swift in Sources */,
@@ -926,10 +930,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_ASSET_PATHS = "\"film24/Preview Content\"";
-				DEVELOPMENT_TEAM = T4AP35H5CT;
+				DEVELOPMENT_TEAM = 5A5V4VNPGA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = film24/Info.plist;
@@ -947,8 +952,9 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.devbuff.apps.film24;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vitalii.apps.film24;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -963,10 +969,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_ASSET_PATHS = "\"film24/Preview Content\"";
-				DEVELOPMENT_TEAM = T4AP35H5CT;
+				DEVELOPMENT_TEAM = 5A5V4VNPGA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = film24/Info.plist;
@@ -984,8 +991,9 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.devbuff.apps.film24;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vitalii.apps.film24;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;

@@ -13,18 +13,23 @@ struct VideoTrimmerView: UIViewRepresentable {
     let videoTrimmer = VideoTrimmer()
     private var asset: AVAsset!
     
-    var videoUrl: URL
-    var player: AVPlayer
+    var trimmerIndex: Int
+    @Binding var videoModel: VideoModel
     @Binding var progressTime: String
-    var playerDidFinish: (()->())?
+    var didBeginScrubbing: ((Int)->())?
     
-    init(videoUrl: URL, player:  AVPlayer, progressTime: Binding<String>, playerDidFinish: (()->())? = nil) {
-        self.videoUrl = videoUrl
-        self.player = player
+    init(
+        trimmerIndex: Int,
+        videoModel:  Binding<VideoModel>,
+        progressTime: Binding<String>,
+        didBeginScrubbing: ((Int)->())? = nil
+    ) {
+        self.trimmerIndex = trimmerIndex
+        self._videoModel = videoModel
         self._progressTime = progressTime
-        self.playerDidFinish = playerDidFinish
+        self.didBeginScrubbing = didBeginScrubbing
         
-        self.asset = AVURLAsset(url: videoUrl, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+        self.asset = AVURLAsset(url: videoModel.videoUrl.wrappedValue, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
     }
     
     func makeUIView(context: UIViewRepresentableContext<Self>) -> VideoTrimmer {
@@ -68,25 +73,18 @@ struct VideoTrimmerView: UIViewRepresentable {
                 for: VideoTrimmer.progressChanged
             )
         
-        NotificationCenter.default
-            .addObserver(
-                context.coordinator,
-                selector: #selector(Coordinator.playerDidFinishPlaying),
-                name: .AVPlayerItemDidPlayToEndTime,
-                object: player.currentItem
-        )
-        
-        player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 30), queue: .main) { time in
+        videoModel.player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 30), queue: .main) { time in
             let finalTime = videoTrimmer.trimmingState == .none ? CMTimeAdd(time, videoTrimmer.selectedRange.start) : time
             videoTrimmer.progress = finalTime
         }
-        
         updateProgress()
         
         return videoTrimmer
     }
     
-    func updateUIView(_ uiView: VideoTrimmer, context: UIViewRepresentableContext<Self>) { }
+    func updateUIView(_ uiView: VideoTrimmer, context: UIViewRepresentableContext<Self>) {
+        uiView.hideThumbView(videoModel.hideCrop)
+    }
     
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -110,16 +108,16 @@ struct VideoTrimmerView: UIViewRepresentable {
         private func updatePlayerAsset() {
             let outputRange = parent.videoTrimmer.trimmingState == .none ? parent.videoTrimmer.selectedRange : parent.asset.fullRange
             let trimmedAsset = parent.asset.trimmedComposition(outputRange)
-            if trimmedAsset != parent.player.currentItem?.asset {
-                parent.player.replaceCurrentItem(with: AVPlayerItem(asset: trimmedAsset))
+            if trimmedAsset != parent.videoModel.player.currentItem?.asset {
+                parent.videoModel.player.replaceCurrentItem(with: AVPlayerItem(asset: trimmedAsset))
             }
         }
         
         @objc func didBeginTrimming(_ sender: VideoTrimmer) {
             parent.updateProgress()
             
-            wasPlaying = (parent.player.timeControlStatus != .paused)
-            parent.player.pause()
+            wasPlaying = (parent.videoModel.player.timeControlStatus != .paused)
+            parent.videoModel.player.pause()
     
             updatePlayerAsset()
         }
@@ -128,7 +126,7 @@ struct VideoTrimmerView: UIViewRepresentable {
             parent.updateProgress()
             
             if wasPlaying == true {
-                parent.player.play()
+                parent.videoModel.player.play()
             }
     
             updatePlayerAsset()
@@ -141,15 +139,16 @@ struct VideoTrimmerView: UIViewRepresentable {
         @objc func didBeginScrubbing(_ sender: VideoTrimmer) {
             parent.updateProgress()
             
-            wasPlaying = (parent.player.timeControlStatus != .paused)
-            parent.player.pause()
+            wasPlaying = (parent.videoModel.player.timeControlStatus != .paused)
+            parent.videoModel.player.pause()
+            parent.didBeginScrubbing?(parent.trimmerIndex)
         }
 
         @objc func didEndScrubbing(_ sender: VideoTrimmer) {
             parent.updateProgress()
             
             if wasPlaying == true {
-                parent.player.play()
+                parent.videoModel.player.play()
             }
         }
 
@@ -157,13 +156,8 @@ struct VideoTrimmerView: UIViewRepresentable {
             parent.updateProgress()
             
             let time = CMTimeSubtract(parent.videoTrimmer.progress, parent.videoTrimmer.selectedRange.start)
-            parent.player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
+            parent.videoModel.player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
         }
-        
-        @objc func playerDidFinishPlaying() {
-            parent.playerDidFinish?()
-        }
-        
         
     }
     

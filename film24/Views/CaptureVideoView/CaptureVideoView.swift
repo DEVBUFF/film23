@@ -125,6 +125,7 @@ struct CaptureVideoView: View {
                 }
                 
             }
+            .blur(radius: model.loading ? 10 : 0)
             .onAppear {
                 if settings.isFirstLaunch {
                     withAnimation {
@@ -156,11 +157,14 @@ struct CaptureVideoView: View {
                 }
             }
             .sheet(isPresented: $photoPickerShowed, content: {
-                ImagePickerView(showPicker: $photoPickerShowed, selectionLimit: 1) { url in
+                ImagePickerView(showPicker: $photoPickerShowed, loading: $model.loading, selectionLimit: 1) { url in
                     videoUrl = url
                     origVideoUrl = url
                     editViewShowed = true
                     fromGallery = true
+                }
+                .onDisappear {
+                    
                 }
             })
             .gesture(DragGesture(minimumDistance: 60, coordinateSpace: .global)
@@ -179,7 +183,14 @@ struct CaptureVideoView: View {
                 })
             
             if editViewShowed && videoUrl != nil {
-                EditVideoView(model: EditVideoViewModel(url: videoUrl!, origUrl: origVideoUrl),
+                EditVideoView(model: EditVideoViewModel(videoModels: [VideoModel(videoUrl: videoUrl!,
+                                                                                 player: AVPlayer(url: videoUrl!),
+                                                                                 filter: model.selectedFilter?.name ?? "",
+                                                                                 ciFilter: model.lutFilter,
+                                                                                 hideCrop: false,
+                                                                                 isHidden: false)],
+                                                        url: videoUrl!,
+                                                        origUrl: origVideoUrl),
                               showed: $editViewShowed,
                               fromGallery: fromGallery)
                     .transition(.opacity)
@@ -187,7 +198,15 @@ struct CaptureVideoView: View {
                     .onDisappear {
                         fromGallery = false
                     }
-            }            
+            }
+            
+            if model.loading {
+                ZStack(alignment: .center) {
+                    Rectangle()
+                        .foregroundColor(.black.opacity(0.2))
+                    LoadingView()
+                }
+            }
         }
         .edgesIgnoringSafeArea(.all)
         .statusBarHidden()

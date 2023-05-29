@@ -44,7 +44,7 @@ import AVFoundation
 	// defines how much the control is insetted from its sides:
 	// this is set to 16, so that you can have the control fullscreen (and have it
 	// edge-to-edge when zooming in)
-	@IBInspectable var horizontalInset: CGFloat = 16 {
+	@IBInspectable var horizontalInset: CGFloat = 8 {
 		didSet {
 			guard horizontalInset != oldValue else {return}
 			setNeedsLayout()
@@ -489,6 +489,17 @@ import AVFoundation
 		}
 		progressIndicatorControl.alpha = progressIndicator.alpha
 	}
+    
+    // MARK: - Public
+    func hideThumbView(_ hide: Bool) {
+        print("hide \(hide)")
+        thumbView.isHidden = hide
+        thumbnailLeadingCoverView.isHidden = hide
+        thumbnailTrailingCoverView.isHidden = hide
+        leadingThumbRest.isHidden = hide
+        trailingThumbRest.isHidden = hide
+        
+    }
 
 
 	// MARK: - Input

@@ -13,6 +13,7 @@ class CaptureVideoViewModel: ObservableObject {
     @Published var error: Error?
     @Published var frame: CGImage?
     @Published var recordingTime: String = "00:00"
+    @Published var loading = false
     
     private let localFilesService = LocalFilesService()
     

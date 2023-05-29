@@ -12,5 +12,5 @@ extension Color {
     static let main = Color("Main")
     static let second = Color("Secondary")
     static let onboardButtons = Color("OnboardButtons")
-    
+    static let filterEdit = Color("FilterEdit")
 }

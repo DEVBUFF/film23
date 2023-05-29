@@ -9,13 +9,18 @@ import SwiftUI
 import AVKit
 
 struct VideoModel: Identifiable, Hashable {
+    static func == (lhs: VideoModel, rhs: VideoModel) -> Bool {
+        lhs.id == rhs.id
+    }
+    
     let id = UUID().uuidString
     
-    var videoTrimmerView: VideoTrimmerView
-    var videoUrl: URL?
+    var videoUrl: URL
     var player: AVPlayer
-    var filter: FilterModel?
+    var filter: String?
     var ciFilter: CIFilter?
+    var hideCrop: Bool = false
+    var isHidden = false
 }
 
 struct EditVideoView: View {
@@ -28,21 +33,20 @@ struct EditVideoView: View {
     @State private var selectedFilterIndex = 0
     @State private var showImagePicker = false
     @State private var videoModelIndex = 0
+    @State private var singleEditMode = false
+    
+    let pub = NotificationCenter.default
+        .publisher(for: .AVPlayerItemDidPlayToEndTime)
     
     init(model: EditVideoViewModel, showed: Binding<Bool>, fromGallery: Bool = false) {
         let player = AVPlayer(url: model.videoUrl)
         self._model = ObservedObject(wrappedValue: model)
         self._showed = showed
-        self._player = State(initialValue: player)
+        self._player = State(initialValue: AVPlayer())
         self._fromGallery = State(initialValue: fromGallery)
+        
         if fromGallery {
             self.model.videoModels = [VideoModel(
-                videoTrimmerView: VideoTrimmerView(
-                    videoUrl: model.videoUrl,
-                    player: player,
-                    progressTime: .constant("0"),
-                    playerDidFinish: nil
-                ),
                 videoUrl: model.videoUrl,
                 player: player,
                 filter: nil,
@@ -51,123 +55,220 @@ struct EditVideoView: View {
     }
     
     var body: some View {
+        if fromGallery {
+            
+        } else {
+            
+        }
         ZStack {
             Color.black
-            
-            ZStack(alignment: .bottom) {
-                if let url = model.videoModels[videoModelIndex].videoUrl {
-                    VideoPreviewView(url: url, player: $model.videoModels[videoModelIndex].player)
+            ZStack {
+                ZStack(alignment: .bottom) {
+                    if videoModelIndex < model.videoModels.count {
+                        VideoPreviewView(
+                            url: model.videoModels[videoModelIndex].videoUrl,
+                            player: $model.videoModels[videoModelIndex].player,
+                            progressTime: fromGallery ? $progressTime : .constant("")
+                        )
+                        .id(model.videoModels[videoModelIndex].id)
                         .edgesIgnoringSafeArea(.all)
-                }
-                                
-                LinearGradient(colors: [.black, .clear], startPoint: .bottom, endPoint: .top)
-                    .frame(height: 130)
-            }
-            .padding(.bottom, 110)
-            
-            VStack(spacing: 27) {
-                Spacer()
-                
-                ScrollView(.horizontal) {
-                    HStack(spacing: 0) {
-                        ForEach(Array(model.videoModels.enumerated()), id: \.offset) { index, m in
-                            if let url = m.videoUrl {
-                                VideoTrimmerView(
-                                    videoUrl: url,
-                                    player: m.player,
-                                    progressTime: $progressTime
-                                ) {
-                                    playNextPlayer()
-                                }
-                                .frame(height: 60)
-                                .frame(maxWidth: 130)
-                                .frame(minWidth: 130)
-                            }
-                        }
-                        
-                        plusButtonView
-                        Spacer()
-                    }
-                    .padding(.horizontal, 25)
-                }
-                
-                VStack(spacing: 8) {
-                    Button {
-                        model.saveVideoToPhotos(url: model.videoUrl, player: fromGallery ? player : nil) {
-                            showed = false
-                        }
-                    } label: {
-                        Text("SAVE")
-                            .font(.barlow(.regular, size: 28))
-                            .foregroundLinearGradient(
-                                colors: [.main, .second],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
                     }
                     
-                    Text("AND SHARE")
-                        .font(.barlow(.regular, size: 12))
-                        .foregroundColor(.white.opacity(0.3))
+                    LinearGradient(colors: [.black, .clear], startPoint: .bottom, endPoint: .top)
+                        .frame(height: 130)
                 }
-            }
-            .padding(.bottom, 45)
-            
-            VStack {
-                HStack {
+                .padding(.bottom, 110)
+                
+                VStack(spacing: 27) {
                     Spacer()
-                    Button {
-                        showed = false
-                    } label: {
-                        Image("close")
-                    }
-                    .frame(width: 44, height: 44)
-                }
-                .padding(.horizontal, 10)
-                
-                Spacer()
-            }
-            .padding(.top, 50)
-            
-            VStack(spacing: 16) {
-                Text(progressTime)
-                    .foregroundColor(.black)
-                    .font(.barlow(.regular, size: 14))
-                    .background(
-                        Capsule()
-                            .foregroundColor(.white)
-                            .padding(.vertical, -8)
-                            .padding(.horizontal, -10)
-                    )
-                
-                if fromGallery && model.videoModels.count < 2 {
-                    FiltersControllerView(filters: model.filters, selectedIndex: $selectedFilterIndex)
-                        .onTapGesture {
-                            //filtersShowed = true
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .bottom, spacing: 3) {
+                            ForEach(Array(model.videoModels.enumerated()), id: \.offset) { index, m in
+                                if !m.isHidden {
+                                    ZStack(alignment: .bottom) {
+                                        if model.videoModels.count > 1 && !singleEditMode {
+                                            ZStack(alignment: .top) {
+                                                RoundedRectangle(cornerRadius: 16)
+                                                    .foregroundColor(m.filter == nil ? .second : .filterEdit)
+                                                    .frame(width: 112)
+                                                    .frame(height: 86)
+                                                
+                                                HStack {
+                                                    Text(m.filter == nil ? "ORIGINAL" : "\(m.filter ?? "")")
+                                                        .font(.system(size: 10, weight: .medium))
+                                                        .foregroundColor(.black)
+                                                    Spacer()
+                                                }
+                                                .padding(.top, 8)
+                                                .padding(.leading, 16)
+                                            }
+                                        }
+                                        
+                                        VideoTrimmerView(
+                                            trimmerIndex: index,
+                                            videoModel: $model.videoModels[index],
+                                            progressTime: fromGallery ? .constant("") : $progressTime
+                                        ) { i in
+                                            playVideo(with: i)
+                                        }
+                                        .id(m.id)
+                                        .frame(height: 60)
+                                        .frame(width: model.videoModels.count > 1 && !singleEditMode ? 130 : singleEditMode ? UIScreen.main.bounds.width-64 : UIScreen.main.bounds.width-106)
+                                        .if(model.videoModels.count > 1) { v in
+                                            v.onTapGesture {
+                                                singleEditMode = true
+                                                model.videoModels.enumerated().forEach { i, videoModel in
+                                                    if videoModel.id != m.id {
+                                                        model.videoModels[i].isHidden = true
+                                                    } else {
+                                                        videoModelIndex = i
+                                                        model.videoModels[i].hideCrop = false
+                                                    }
+                                                }
+                                                if let filterIndex = model.filters.firstIndex(where: { $0.name == model.videoModels[videoModelIndex].filter }) {
+                                                    selectedFilterIndex = filterIndex
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if !singleEditMode && fromGallery {
+                                plusButtonView
+                            }
+                            
+                            Spacer()
                         }
+                        .padding(.horizontal, 25)
+                    }
+                    
+                    VStack(spacing: 8) {
+                        Button {
+                            if singleEditMode {
+                                singleEditMode = false
+                                model.videoModels.enumerated().forEach { i, _ in
+                                    model.videoModels[i].isHidden = false
+                                    model.videoModels[i].hideCrop = true
+                                }
+                                selectedFilterIndex = 0
+                                model.updateVideo(with: model.videoModels[videoModelIndex])
+                            } else {
+                                model.saveVideoToPhotos(url: model.videoUrl, player: fromGallery ? player : nil) {
+                                    showed = false
+                                }
+                            }
+                        } label: {
+                            Text(singleEditMode ? "DONE" : "SAVE")
+                                .font(.barlow(.regular, size: 28))
+                                .foregroundLinearGradient(
+                                    colors: [.main, .second],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                        }
+                        
+                        Text(singleEditMode ? "EDITING" : "AND SHARE")
+                            .font(.barlow(.regular, size: 12))
+                            .foregroundColor(.white.opacity(0.3))
+                    }
                 }
-                Spacer()
-            }
+                .padding(.bottom, 45)
+                
+                VStack(spacing: 16) {
+                    HStack {
+                        if singleEditMode {
+                            Button {
+                                let tempIndex = videoModelIndex
+                                videoModelIndex = videoModelIndex > 0 ? videoModelIndex-1 : 0
+                                model.videoModels.enumerated().forEach { i, _ in
+                                    model.videoModels[i].isHidden = false
+                                    model.videoModels[i].hideCrop = true
+                                }
+                                
+                                model.videoModels.remove(at: tempIndex)
+                                singleEditMode = false
+                                selectedFilterIndex = 0
+                                
+                                
+                            } label: {
+                                Image("delete")
+                            }
+                            .frame(width: 44, height: 44)
+                            
+                        } else {
+                            Spacer()
+                                .frame(width: 44)
+                        }
+                        
+                        Spacer()
+                        
+                        Text(progressTime)
+                            .foregroundColor(.black)
+                            .font(.barlow(.regular, size: 14))
+                            .background(
+                                Capsule()
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, -8)
+                                    .padding(.horizontal, -10)
+                            )
+                        
+                        Spacer()
+                        
+                        Button {
+                            if singleEditMode {
+                                singleEditMode = false
+                                model.videoModels.enumerated().forEach { i, _ in
+                                    model.videoModels[i].isHidden = false
+                                    model.videoModels[i].hideCrop = true
+                                }
+                                selectedFilterIndex = 0
+                            } else {
+                                showed = false
+                            }
+                        } label: {
+                            Image("close")
+                        }
+                        .frame(width: 44, height: 44)
+                    }
+                    .padding(.horizontal, 10)
+                    
+                    
+                    if singleEditMode || (fromGallery && model.videoModels.count < 2) {
+                        FiltersControllerView(filters: model.filters, selectedIndex: $selectedFilterIndex)
+                            .onTapGesture {
+                                //filtersShowed = true
+                            }
+                    }
+                    Spacer()
+                }
                 .padding(.top, 56)
+            }
+            .blur(radius: model.loading ? 10 : 0)
+            
+            if model.loading {
+                ZStack(alignment: .center) {
+                    Rectangle()
+                        .foregroundColor(.black.opacity(0.2))
+                    
+                    LoadingView()
+                }
+            }
         }
         .sheet(isPresented: $showImagePicker, content: {
-            ImagePickerView(showPicker: $showImagePicker, selectionLimit: 1) { url in
+            ImagePickerView(showPicker: $showImagePicker, loading: $model.loading, selectionLimit: 1) { url in
                 guard let url else { return }
                 let player = AVPlayer(url: url)
                 self.model.videoModels.append(
                     VideoModel(
-                        videoTrimmerView: VideoTrimmerView(
-                            videoUrl: url,
-                            player: player,
-                            progressTime: .constant("0"),
-                            playerDidFinish: nil
-                        ),
                         videoUrl: url,
                         player: player,
                         filter: nil,
                         ciFilter: nil
                     )
                 )
+                self.model.videoModels[videoModelIndex].player.play()
+                self.model.videoModels.enumerated().forEach({ model.videoModels[$0.offset].hideCrop = true })
             }
         })
         .gesture(DragGesture(minimumDistance: 60, coordinateSpace: .global)
@@ -185,6 +286,10 @@ struct EditVideoView: View {
                     updatePlayerFilter()
                 }
             })
+        .onReceive(pub) { (output) in            
+            playNextPlayer()
+        }
+        
     }
     
     func share() {
@@ -210,10 +315,11 @@ struct EditVideoView: View {
     
     private func updatePlayerFilter() {
         guard let filter = model.lutFilter else {
-            
+            model.videoModels[videoModelIndex].player.currentItem?.videoComposition = nil
+            model.videoModels[videoModelIndex].filter = nil
             return
         }
-        guard let asset = player.currentItem?.asset else { return }
+        guard let asset = model.videoModels[videoModelIndex].player.currentItem?.asset else { return }
         
         let composition = AVVideoComposition(asset: asset, applyingCIFiltersWithHandler: { request in
 
@@ -227,26 +333,35 @@ struct EditVideoView: View {
             request.finish(with: output, context: nil)
         })
         
-        player.currentItem?.videoComposition = composition
+        model.videoModels[videoModelIndex].player.currentItem?.videoComposition = composition
+        model.videoModels[videoModelIndex].filter = model.selectedFilter?.name
     }
     
-    private func playVideos() {
-        
+    private func playVideo(with index: Int) {
+        model.videoModels.enumerated().forEach({
+            if index != $0.offset {
+                model.videoModels[$0.offset].player.pause()
+                model.videoModels[$0.offset].player.seek(to: CMTime(seconds: 0, preferredTimescale: 1))
+            }
+        })
+        videoModelIndex = index
     }
     
     private func playNextPlayer() {
-        videoModelIndex += 1
-        if videoModelIndex > model.videoModels.count-1 {
-            videoModelIndex = 0
-            model.videoModels[videoModelIndex].player.seek(to: CMTime(seconds: 0, preferredTimescale: 1))
+        model.videoModels.enumerated().forEach({
+            model.videoModels[$0.offset].player.pause()
+            model.videoModels[$0.offset].player.seek(to: CMTime(seconds: 0, preferredTimescale: 1))
+        })
+        if !singleEditMode {
+            videoModelIndex += 1
+            
+            if videoModelIndex > model.videoModels.count-1 {
+                videoModelIndex = 0
+            }
             model.videoModels[videoModelIndex].player.play()
         } else {
-            model.videoModels[videoModelIndex].player.seek(to: CMTime(seconds: 0, preferredTimescale: 1))
             model.videoModels[videoModelIndex].player.play()
-           //
         }
-        //model.objectWillChange.send()
-        print(videoModelIndex)
     }
 }
 
